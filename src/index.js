@@ -11,6 +11,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use('/api/auth', require('./routes/auth.routes'))
+app.use('api/rooms', require('./routes/room.routes'))
 
 app.get('/', (req, res) => {
     res.json({ message: 'API Hotel Trucks active' })
