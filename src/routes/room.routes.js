@@ -3,8 +3,8 @@ const router = express.Router()
 
 const { getAllRooms, getRoomById, createRoom, updateRoom, deleteRoom } = require('../controllers/room.controller.js')
 
-const { auth } = require('../middlewares/auth')
-const  checkRole = require('../middlewares/roles')
+const auth  = require('../middlewares/auth')
+const checkRole = require('../middlewares/roles')
 
 router.get('/', auth, getAllRooms)  
 router.get('/:id', auth, getRoomById)

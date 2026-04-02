@@ -11,11 +11,11 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use('/api/auth', require('./routes/auth.routes'))
-app.use('api/rooms', require('./routes/room.routes'))
+app.use('/api/rooms', require('./routes/room.routes'))
 
 app.get('/', (req, res) => {
     res.json({ message: 'API Hotel Trucks active' })
 })
 
 const PORT = process.env.PORT || 5000
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`))
+app.listen(PORT, () => console.log(`Server running at port ${PORT}`))
