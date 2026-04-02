@@ -8,6 +8,7 @@ const clientSchema = new mongoose.Schema({
     truckPlate: { type: String },
     usualRoom: { type: Number },
     email: { type: String },
+    active: { type: Boolean, default: true },
 
 }, { timestamps: true })
 
