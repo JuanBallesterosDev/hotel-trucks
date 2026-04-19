@@ -17,10 +17,9 @@ const recordSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
-recordSchema.pre('save', function(next) {
+recordSchema.pre('save', async function() {
     this.totalDay = this.roomPrice + this.totalConsumptions
     this.balance = this.paid - this.totalDay
-    next()
 })
 
 module.exports = mongoose.model('Record', recordSchema)

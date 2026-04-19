@@ -15,6 +15,7 @@
     app.use('/api/clients', require('./routes/client.routes'))
     app.use('/api/products', require('./routes/product.routes')) 
     app.use('/api/shifts', require('./routes/shift.routes'))
+    app.use('/api/records', require('./routes/record.routes'))
 
     app.get('/', (req, res) => {
         res.json({ message: 'API Hotel Trucks active' })
