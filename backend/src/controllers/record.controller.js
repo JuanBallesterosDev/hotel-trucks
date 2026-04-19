@@ -1,5 +1,6 @@
 const Record = require('../models/Record')
 const Shift = require('../models/Shift')
+const Room = require('../models/Room')
 
 const createRecord = async (req, res) => {
     try {
@@ -19,6 +20,7 @@ const createRecord = async (req, res) => {
             roomPrice,
             shift: shift._id
         })
+        await Room.findByIdAndUpdate(room, { status: 'occupied' })
         res.status(201).json(record)
     } catch (error) {
         console.log(error)
