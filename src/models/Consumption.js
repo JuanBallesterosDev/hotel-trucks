@@ -13,9 +13,8 @@ const consumptionSchema = new mongoose.Schema({
 
 }, { timestamps: true })
 
-consumptionSchema.pre('save', function(next) {
+consumptionSchema.pre('save', async function() {
     this.total = this.quantity * this.unitPrice
-    next()
 })
 
 module.exports = mongoose.model('Consumption', consumptionSchema) 

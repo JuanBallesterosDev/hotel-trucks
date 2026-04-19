@@ -5,7 +5,6 @@ const createRecord = async (req, res) => {
     try {
         const { client, room, roomPrice } = req.body
 
-        // Buscar el turno activo del empleado logueado
         const shift = await Shift.findOne({ 
             employee: req.employee._id, 
             status: 'open' 
