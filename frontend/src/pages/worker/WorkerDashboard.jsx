@@ -6,37 +6,86 @@ import api from '../../api/axios'
 
 const WorkerDashboard = () => {
     const [rooms, setRooms] = useState([])
+    const [currentShift, setCurrentShift] = useState(null)
     const { employee, logout } = useAuth()
 
     useEffect(() => {
-        const fetchRooms = async () => {
-            try{
-                const res = await api.get('/rooms')
-                setRooms(res.data)
-            }
-            catch(error){
-                console.error(error)
-            }
-        }
         fetchRooms()
+        fetchCurrentShift()
     }, [])
 
-return(
-    <div>
-        <h1>Welcome, {employee.name}</h1>
-        <button onClick={logout}>Logout</button>
-        <h2>Rooms</h2>
+    const fetchRooms = async () => {
+        try{
+            const res = await api.get('/rooms')
+            setRooms(res.data)
+        }
+        catch(error){
+            console.error(error)
+        }
+    }
+
+    const fetchCurrentShift = async () => {
+        try{
+            const res = await api.get('/shifts/current')
+            setCurrentShift(res.data)
+        }
+        catch(error){
+            setCurrentShift(null)
+        }
+    }
+
+    const handleOpenShift = async () => {
+        const initialCash = prompt('Enter initial cash amount:')
+        if (!initialCash) return
+        try {
+            const res = await api.post('/shifts', { initialCash: Number(initialCash) })
+            setCurrentShift(res.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleCloseShift = async () => {
+        const finalCash = prompt('Enter final cash amount:')
+        if (!finalCash) return
+        try {
+            await api.put(`/shifts/${currentShift._id}/close`, { finalCash: Number(finalCash) })
+            setCurrentShift(null)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    return (
         <div>
-            {rooms.map((room) => (
-                <div key={room._id}>
-                    <p>Room {room.number}</p>
-                    <p>{room.type}</p>
-                    <p>{room.status}</p>
-                </div>
-            ))}
+            <nav>
+                <h1>Hotel Trucks</h1>
+                <p>Welcome, {employee.name}</p>
+                {currentShift ? (
+                    <button onClick={handleCloseShift}>Close Shift</button>
+                ) : (
+                    <button onClick={handleOpenShift}>Open Shift</button>
+                )}
+                <button onClick={logout}>Logout</button>
+            </nav>
+
+            <h2>Rooms</h2>
+            <div>
+                {rooms.map((room) => (
+                    <div key={room._id} style={{ 
+                        backgroundColor: room.status === 'available' ? 'green' : 'red',
+                        padding: '20px',
+                        margin: '10px',
+                        cursor: 'pointer'
+                    }}>
+                        <p>Room {room.number}</p>
+                        <p>{room.type}</p>
+                        <p>${room.price}</p>
+                    </div>
+                ))}
+            </div>
         </div>
-    </div>
-)    
+    )
 }
 
 export default WorkerDashboard
