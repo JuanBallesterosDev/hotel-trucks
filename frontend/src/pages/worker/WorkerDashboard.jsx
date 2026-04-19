@@ -10,11 +10,13 @@ const WorkerDashboard = () => {
     const { employee, logout } = useAuth()
     const [selectedRoom, setSelectedRoom] = useState(null)
     const [clients, setClients] = useState([])
+    const [activeRecords, setActiveRecords] = useState([])
 
     useEffect(() => {
         fetchRooms()
         fetchCurrentShift()
         fetchClients()
+        fetchActiveRecords()
     }, [])
 
     const fetchRooms = async () => {
@@ -45,6 +47,30 @@ const WorkerDashboard = () => {
             console.error(error)
         }
     }
+
+    const fetchActiveRecords = async () => {
+        try {
+            const res = await api.get('/records')
+            const active = res.data.filter(r => r.status === 'active')
+            setActiveRecords(active)
+        } 
+        catch (error) {
+            console.error(error)
+        }
+    }
+    
+    const getCapacity = (type) => {
+        if(type === 'single') return 1
+        if(type === 'double') return 2
+        if(type === 'triple') return 3
+        return 1
+    }
+
+    const getOccupants = (roomId) => {
+        console.log('activeRecords:', activeRecords)
+        return activeRecords.filter(r => r.room._id.toString() === roomId.toString()).length
+    }
+
 
     const handleOpenShift = async () => {
         const initialCash = prompt('Enter initial cash amount:')
@@ -81,6 +107,7 @@ const WorkerDashboard = () => {
             })
             setSelectedRoom(null)
             fetchRooms()
+            fetchActiveRecords()
         } 
         catch (error) {
             console.error(error)
@@ -102,22 +129,29 @@ const WorkerDashboard = () => {
 
             <h2>Rooms</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                {rooms.map((room) => (
-                    <div key={room._id} 
-                    onClick={() => setSelectedRoom(room)}
-                    style={{ 
-                        backgroundColor: room.status === 'available' ? 'green' : 'red',
-                        padding: '20px',
-                        margin: '10px',
-                        cursor: 'pointer',
-                        width: '150px'
-                    }}>
-                        <p>Room {room.number}</p>
-                        <p>{room.type}</p>
-                        <p>${room.price}</p>
-                        <p>{room.status}</p>
-                    </div>
-                ))}
+                {rooms.map((room) => {
+                    const occupants = getOccupants(room._id)
+                    const capacity = getCapacity(room.type)
+                    const isFull = occupants >= capacity
+
+                    return(
+                        <div key={room._id} 
+                            onClick={() => setSelectedRoom(room)}
+                            style={{ 
+                                backgroundColor: occupants   === 0? 'green' : isFull ? 'red' : 'orange',
+                                padding: '20px',
+                                margin: '10px',
+                                cursor: 'pointer',
+                                width: '150px'
+                            }}>
+                            <p>Room {room.number}</p>
+                            <p>{room.type}</p>
+                            <p>${room.price}</p>
+                            <p>{occupants}/{capacity}</p>
+                        </div>
+                    )
+                })}
+                    
             </div>
 
             {selectedRoom && selectedRoom.status === 'available' && (
@@ -131,7 +165,7 @@ const WorkerDashboard = () => {
                             <button onClick={() => handleCheckIn(client)}>Check-in</button>
                         </div>
                     ))}
-                    <button onClick={() => selectedRoom(null)}>Cancel</button>
+                    <button onClick={() => setSelectedRoom(null)}>Cancel</button>
                 </div>
             )}
         </div>

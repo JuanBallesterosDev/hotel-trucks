@@ -81,6 +81,14 @@ const checkOut = async (req, res) => {
         record.status = 'checkout'
         record.paid = req.body.paid || record.paid
         await record.save()
+
+        const activeRecords = await Record.find({
+            room: record.room,
+            status: 'active'
+        })
+        if(activeRecords.length === 0){
+            await Room.findByIdAndUpdate(record.room, { status: 'available' })
+        }
         res.json(record)
     } catch (error) {
         res.status(500).json({ message: 'Server error.' })
