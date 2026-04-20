@@ -11,12 +11,17 @@ const WorkerDashboard = () => {
     const [selectedRoom, setSelectedRoom] = useState(null)
     const [clients, setClients] = useState([])
     const [activeRecords, setActiveRecords] = useState([])
+    const [activeRecord, setActiveRecord] = useState(null)
+    const [consumptions, setConsumptions] = useState([])
+    const [products, setProducts] = useState([])
+    const [quantities, setQuantities] = useState({})
 
     useEffect(() => {
         fetchRooms()
         fetchCurrentShift()
         fetchClients()
         fetchActiveRecords()
+        fetchProducts()
     }, [])
 
     const fetchRooms = async () => {
@@ -58,6 +63,24 @@ const WorkerDashboard = () => {
             console.error(error)
         }
     }
+
+    const fetchProducts = async () => {
+        try {
+            const res = await api.get('/products')
+            setProducts(res.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const fetchConsumptions = async (recordId) => {
+        try {
+            const res = await api.get(`/consumptions/record/${recordId}`)
+            setConsumptions(res.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
     
     const getCapacity = (type) => {
         if(type === 'single') return 1
@@ -67,7 +90,6 @@ const WorkerDashboard = () => {
     }
 
     const getOccupants = (roomId) => {
-        console.log('activeRecords:', activeRecords)
         return activeRecords.filter(r => r.room._id.toString() === roomId.toString()).length
     }
 
@@ -114,6 +136,35 @@ const WorkerDashboard = () => {
         }
     }
 
+    const handleRoomClick = async (room) => {
+        setSelectedRoom(room)
+        const occupants = getOccupants(room._id)
+        if (occupants > 0) {
+            const recordsInRoom = activeRecords.filter(r => r.room._id.toString() === room._id.toString())
+            setActiveRecord(recordsInRoom[0])
+            fetchConsumptions(recordsInRoom[0]._id)
+        }
+    }
+
+    const handleAddConsumption = async (product) => {
+        try {
+            const quantity = quantities[product._id] || 1
+            await api.post('/consumptions', {
+                record: activeRecord._id,
+                product: product._id,
+                quantity: quantity
+            })
+
+            const res = await api.get(`/records/${activeRecord._id}`)
+            setActiveRecord(res.data)
+            fetchConsumptions(activeRecord._id)
+            fetchActiveRecords()
+            setQuantities({})
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
         <div>
             <nav>
@@ -136,7 +187,7 @@ const WorkerDashboard = () => {
 
                     return(
                         <div key={room._id} 
-                            onClick={() => setSelectedRoom(room)}
+                            onClick={() => handleRoomClick(room)}
                             style={{ 
                                 backgroundColor: occupants   === 0? 'green' : isFull ? 'red' : 'orange',
                                 padding: '20px',
@@ -168,8 +219,43 @@ const WorkerDashboard = () => {
                     <button onClick={() => setSelectedRoom(null)}>Cancel</button>
                 </div>
             )}
+
+            {selectedRoom && getOccupants(selectedRoom._id) > 0 && activeRecord && (
+                <div>
+                    <h3>Room {selectedRoom.number} - {activeRecord.client.name}</h3>
+                    <p>Room price: ${activeRecord.roomPrice}</p>
+                    <p>Consumptions: ${activeRecord.totalConsumptions}</p>
+                    <p>Total: ${activeRecord.totalDay}</p>
+                    <p>Paid: ${activeRecord.paid}</p>
+                    <p>Balance: ${activeRecord.balance}</p>
+
+                    <h4>Consumptions:</h4>
+                    {consumptions.map((c) => (
+                        <div key={c._id}>
+                            <p>{c.productName} x{c.quantity} — ${c.total}</p>
+                        </div>
+                    ))}
+
+                    <h4>Add consumption:</h4>
+                    {products.map((product) => (
+                        <div key={product._id}>
+                            <p>{product.name} — ${product.price}</p>
+                            <input
+                                type="number"
+                                min="1"
+                                value={quantities[product._id] || 1}
+                                onChange={(e) => setQuantities({ ...quantities, [product._id]: Number(e.target.value) })}
+                            />
+                            <button onClick={() => handleAddConsumption(product)}>Add</button>
+                        </div>
+                    ))}
+
+                    <button onClick={() => setSelectedRoom(null)}>Close</button>
+                </div>
+            )}
         </div>
     )
 }
 
 export default WorkerDashboard
+
