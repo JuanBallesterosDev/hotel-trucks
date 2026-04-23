@@ -18,6 +18,8 @@ const WorkerDashboard = () => {
     const [clientDebt, setClientDebt] = useState(0)
     const [debts, setDebts] = useState([])
     const [selectedDebtor, setSelectedDebtor] = useState(null)
+    const [showNewClient, setShowNewClient] = useState(false)
+    const [newClient, setNewClient] = useState({ name: '', idNumber: '', phone: '', truckPlate: '', email: '' })
 
     useEffect(() => {
         fetchRooms()
@@ -167,6 +169,23 @@ const WorkerDashboard = () => {
             setConsumptions([])
             fetchRooms()
             fetchActiveRecords()
+            fetchDebts()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handlePartialPayment = async () => {
+        const payment = prompt('Enter payment amount:')
+        if (payment === null) return
+        try {
+            await api.post(`/records/client/${activeRecord.client._id}/payment`, { 
+                amount: Number(payment) 
+            })
+            const updated = await api.get(`/records/${activeRecord._id}`)
+            setActiveRecord(updated.data)
+            fetchDebts()
+            fetchClientDebt(activeRecord.client._id)            
         } catch (error) {
             console.error(error)
         }
@@ -185,7 +204,17 @@ const WorkerDashboard = () => {
                     fetchClientDebt(record.client._id)
             }
             
-            
+        }
+    }
+
+    const handleCreateClient = async () => {
+        try {
+            const res = await api.post('/clients', newClient)
+            setClients([...clients, res.data])
+            setNewClient({ name: '', idNumber: '', phone: '', truckPlate: '', email: '' })
+            setShowNewClient(false)
+        } catch (error) {
+            console.error(error)
         }
     }
 
@@ -277,6 +306,22 @@ const WorkerDashboard = () => {
                 <div>
                     <h3>Check-in - Room {selectedRoom.number}</h3>
                     <p>Price: ${selectedRoom.price}</p>
+
+                    <button onClick={() => setShowNewClient(!showNewClient)}>
+                        {showNewClient ? 'Cancel' : '+ New Client'}
+                    </button>
+
+                    {showNewClient && (
+                        <div>
+                            <input placeholder="Name" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} />
+                            <input placeholder="ID Number" value={newClient.idNumber} onChange={(e) => setNewClient({...newClient, idNumber: e.target.value})} />
+                            <input placeholder="Phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} />
+                            <input placeholder="Truck Plate" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})} />
+                            <input placeholder="Email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} />
+                            <button onClick={handleCreateClient}>Save Client</button>
+                        </div>
+                    )}
+
                     <h4>Select client:</h4>
                     {clients.map((client) => (
                         <div key={client._id}>
@@ -318,6 +363,8 @@ const WorkerDashboard = () => {
                             <button onClick={() => handleAddConsumption(product)}>Add</button>
                         </div>
                     ))}
+
+                    <button onClick={handlePartialPayment}>Register Payment</button>
 
                     <button onClick={handleCheckOut}>Check-out</button>
 

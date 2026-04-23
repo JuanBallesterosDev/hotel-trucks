@@ -103,8 +103,29 @@ const checkOut = async (req, res) => {
         if (record.status === 'checkout') {
             return res.status(400).json({ message: 'Record already checked out.' })
         }
+
+        let payment = req.body.paid || 0
+        if(payment > 0){
+            const records = await Record.find({
+                client: record.client,
+                balance: { $lt: 0 }
+            }).sort({ date: 1 })
+
+            for(const r of records){
+                if(payment <= 0) break
+                const debt = Math.abs(r.balance)
+                if(payment >= debt){
+                    r.paid += debt
+                    payment -= debt
+                }
+                else{
+                    r.paid += payment
+                    payment = 0
+                }
+                await r.save()
+            }
+        }
         record.status = 'checkout'
-        record.paid = req.body.paid || record.paid
         await record.save()
 
         const activeRecords = await Record.find({
@@ -133,4 +154,37 @@ const getClientDebt = async (req, res) => {
     }
 }
 
-module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts }
+const registerPayment = async (req, res) => {
+    try {
+        let payment = req.body.amount
+        
+        const records = await Record.find({
+            client: req.params.clientId,
+            balance: { $lt: 0 }
+        }).sort({ date: 1 })
+
+        if (records.length === 0) {
+            return res.status(404).json({ message: 'No debts found for this client.' })
+        }
+
+        for (const record of records) {
+            if (payment <= 0) break
+            const debt = Math.abs(record.balance)
+            if (payment >= debt) {
+                record.paid += debt
+                payment -= debt
+            } else {
+                record.paid += payment
+                payment = 0
+            }
+            await record.save()
+        }
+
+        res.json({ message: 'Payment registered successfully.' })
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' })
+    }
+}
+
+
+module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment }
