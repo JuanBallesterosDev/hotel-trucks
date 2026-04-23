@@ -40,6 +40,31 @@ const getAllRecords = async (req, res) => {
     }
 }
 
+const getAllDebts = async (req, res) => {
+    try {
+        const records = await Record.find({ balance: { $lt: 0 } })
+            .populate('client', 'name idNumber phone')
+            .populate('room', 'number')
+
+        const debtsByClient = {}
+        records.forEach(record => {
+            const clientId = record.client._id.toString()
+            if(!debtsByClient[clientId]){
+                debtsByClient[clientId] = {
+                    client:  record.client,
+                    totalDebt: 0,
+                    records: []
+                }
+            }
+            debtsByClient[clientId].totalDebt += Math.abs(record.balance)
+            debtsByClient[clientId].records.push(record)
+        })
+        res.json(Object.values(debtsByClient    ))
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' })
+    }
+}
+
 const getRecordById = async (req, res) => {
     try {
         const record = await Record.findById(req.params.id)
@@ -108,4 +133,4 @@ const getClientDebt = async (req, res) => {
     }
 }
 
-module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt }
+module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts }

@@ -16,6 +16,8 @@ const WorkerDashboard = () => {
     const [products, setProducts] = useState([])
     const [quantities, setQuantities] = useState({})
     const [clientDebt, setClientDebt] = useState(0)
+    const [debts, setDebts] = useState([])
+    const [selectedDebtor, setSelectedDebtor] = useState(null)
 
     useEffect(() => {
         fetchRooms()
@@ -23,6 +25,7 @@ const WorkerDashboard = () => {
         fetchClients()
         fetchActiveRecords()
         fetchProducts()
+        fetchDebts()
     }, [])
 
     const fetchRooms = async () => {
@@ -87,6 +90,14 @@ const WorkerDashboard = () => {
         try {
             const res = await api.get(`/records/client/${clientId}/debt`)
             setClientDebt(res.data.totalDebt)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const fetchDebts = async () => {
+        try {
+            const res = await api.get('/records/debts')
+            setDebts(res.data)
         } catch (error) {
             console.error(error)
         }
@@ -235,6 +246,31 @@ const WorkerDashboard = () => {
                     )
                 })}
                     
+            </div>
+
+            <div>
+                <h2>Debts</h2>
+                {debts.length === 0 ? (
+                    <p>No debts registered.</p>
+                ) : (
+                    debts.map((debtor) => (
+                        <div key={debtor.client._id}
+                            onClick={() => setSelectedDebtor(selectedDebtor?.client._id === debtor.client._id ? null : debtor)}
+                            style={{ cursor: 'pointer' }}>
+                            <p>{debtor.client.name} - Total debt: ${debtor.totalDebt}</p>
+                            {selectedDebtor?.client._id === debtor.client._id && (
+                                <div>
+                                    <h4>History:</h4>
+                                    {debtor.records.map((record) => (
+                                        <div key={record._id}>
+                                            <p>Room {record.room.number} - ${Math.abs(record.balance)} - {record.status} - {new Date(record.date).toLocaleDateString()}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ))
+                )}
             </div>
 
             {selectedRoom && selectedRoom.status === 'available' && (
