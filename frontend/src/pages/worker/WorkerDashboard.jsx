@@ -15,6 +15,7 @@ const WorkerDashboard = () => {
     const [consumptions, setConsumptions] = useState([])
     const [products, setProducts] = useState([])
     const [quantities, setQuantities] = useState({})
+    const [clientDebt, setClientDebt] = useState(0)
 
     useEffect(() => {
         fetchRooms()
@@ -81,6 +82,15 @@ const WorkerDashboard = () => {
             console.error(error)
         }
     }
+
+    const fetchClientDebt = async (clientId) => {
+        try {
+            const res = await api.get(`/records/client/${clientId}/debt`)
+            setClientDebt(res.data.totalDebt)
+        } catch (error) {
+            console.error(error)
+        }
+    }
     
     const getCapacity = (type) => {
         if(type === 'single') return 1
@@ -136,13 +146,35 @@ const WorkerDashboard = () => {
         }
     }
 
+    const handleCheckOut = async () => {
+        const paid = prompt('Enter amount paid:')
+        if (paid === null) return
+        try {
+            await api.put(`/records/${activeRecord._id}/checkout`, { paid: Number(paid) })
+            setSelectedRoom(null)
+            setActiveRecord(null)
+            setConsumptions([])
+            fetchRooms()
+            fetchActiveRecords()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     const handleRoomClick = async (room) => {
         setSelectedRoom(room)
         const occupants = getOccupants(room._id)
         if (occupants > 0) {
             const recordsInRoom = activeRecords.filter(r => r.room._id.toString() === room._id.toString())
-            setActiveRecord(recordsInRoom[0])
-            fetchConsumptions(recordsInRoom[0]._id)
+            if(recordsInRoom.length > 0){
+                const record = recordsInRoom[0]
+                setActiveRecord(recordsInRoom[0])
+                fetchConsumptions(recordsInRoom[0]._id)
+                if(record.client &&  record.client._id  )
+                    fetchClientDebt(record.client._id)
+            }
+            
+            
         }
     }
 
@@ -228,6 +260,7 @@ const WorkerDashboard = () => {
                     <p>Total: ${activeRecord.totalDay}</p>
                     <p>Paid: ${activeRecord.paid}</p>
                     <p>Balance: ${activeRecord.balance}</p>
+                    <p>Total debt: ${clientDebt}</p>
 
                     <h4>Consumptions:</h4>
                     {consumptions.map((c) => (
@@ -249,6 +282,8 @@ const WorkerDashboard = () => {
                             <button onClick={() => handleAddConsumption(product)}>Add</button>
                         </div>
                     ))}
+
+                    <button onClick={handleCheckOut}>Check-out</button>
 
                     <button onClick={() => setSelectedRoom(null)}>Close</button>
                 </div>

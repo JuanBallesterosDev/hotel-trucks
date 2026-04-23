@@ -95,4 +95,17 @@ const checkOut = async (req, res) => {
     }
 }
 
-module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut }
+const getClientDebt = async (req, res) => {
+    try {
+        const records = await Record.find({ 
+            client: req.params.clientId,
+            balance: { $lt: 0 }
+        })
+        const totalDebt = records.reduce((total, r) => total + Math.abs(r.balance), 0)
+        res.json({ totalDebt, records })
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' })
+    }
+}
+
+module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt }
