@@ -238,61 +238,67 @@ const WorkerDashboard = () => {
     }
 
     return (
-        <div>
-            <nav>
-                <h1>Hotel Trucks</h1>
-                <p>Welcome, {employee.name}</p>
+    <div className="min-h-screen bg-[#0f0f0f] text-[#e0e0e0]">
+        
+        {/* Navbar */}
+        <nav className="flex items-center justify-between px-8 py-4 bg-[#1a1a1a] border-b border-[#2d2d2d]">
+            <h1 className="text-2xl font-bold tracking-wide">Hotel Trucks</h1>
+            <div className="flex items-center gap-4">
+                <span className="text-sm text-[#a0a0a0]">Welcome, {employee.name}</span>
                 {currentShift ? (
-                    <button onClick={handleCloseShift}>Close Shift</button>
+                    <button onClick={handleCloseShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Close Shift</button>
                 ) : (
-                    <button onClick={handleOpenShift}>Open Shift</button>
+                    <button onClick={handleOpenShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Open Shift</button>
                 )}
-                <button onClick={logout}>Logout</button>
-            </nav>
+                <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Logout</button>
+            </div>
+        </nav>
 
-            <h2>Rooms</h2>
-            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+        <div className="px-8 py-6">
+
+            {/* Rooms */}
+            <h2 className="text-xl font-semibold mb-4">Rooms</h2>
+            <div className="flex flex-wrap gap-4 mb-8">
                 {rooms.map((room) => {
                     const occupants = getOccupants(room._id)
                     const capacity = getCapacity(room.type)
                     const isFull = occupants >= capacity
+                    const bgColor = occupants === 0 ? 'bg-[#4cc9f0]' : isFull ? 'bg-[#e63946]' : 'bg-[#e76f51]'
 
-                    return(
-                        <div key={room._id} 
+                    return (
+                        <div key={room._id}
                             onClick={() => handleRoomClick(room)}
-                            style={{ 
-                                backgroundColor: occupants   === 0? 'green' : isFull ? 'red' : 'orange',
-                                padding: '20px',
-                                margin: '10px',
-                                cursor: 'pointer',
-                                width: '150px'
-                            }}>
-                            <p>Room {room.number}</p>
-                            <p>{room.type}</p>
-                            <p>${room.price}</p>
-                            <p>{occupants}/{capacity}</p>
+                            className={`${bgColor} p-4 rounded-xl cursor-pointer w-36 text-white hover:opacity-90 transition`}>
+                            <p className="font-bold text-lg">Room {room.number}</p>
+                            <p className="text-sm capitalize">{room.type}</p>
+                            <p className="text-sm">${room.price.toLocaleString()}</p>
+                            <p className="text-sm font-semibold mt-1">{occupants}/{capacity}</p>
                         </div>
                     )
                 })}
-                    
             </div>
 
-            <div>
-                <h2>Debts</h2>
+            {/* Debts */}
+            <h2 className="text-xl font-semibold mb-4">Debts</h2>
+            <div className="mb-8">
                 {debts.length === 0 ? (
-                    <p>No debts registered.</p>
+                    <p className="text-[#a0a0a0] text-sm">No debts registered.</p>
                 ) : (
                     debts.map((debtor) => (
                         <div key={debtor.client._id}
                             onClick={() => setSelectedDebtor(selectedDebtor?.client._id === debtor.client._id ? null : debtor)}
-                            style={{ cursor: 'pointer' }}>
-                            <p>{debtor.client.name} - Total debt: ${debtor.totalDebt}</p>
+                            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-2 cursor-pointer hover:border-[#4895ef] transition">
+                            <div className="flex justify-between items-center">
+                                <p className="font-medium">{debtor.client.name}</p>
+                                <p className="text-[#e63946] font-semibold">Owes: ${debtor.totalDebt.toLocaleString()}</p>
+                            </div>
                             {selectedDebtor?.client._id === debtor.client._id && (
-                                <div>
-                                    <h4>History:</h4>
+                                <div className="mt-3 border-t border-[#2d2d2d] pt-3">
+                                    <p className="text-sm text-[#a0a0a0] mb-2">History:</p>
                                     {debtor.records.map((record) => (
-                                        <div key={record._id}>
-                                            <p>Room {record.room.number} - ${Math.abs(record.balance)} - {record.status} - {new Date(record.date).toLocaleDateString()}</p>
+                                        <div key={record._id} className="flex justify-between text-sm py-1">
+                                            <p>Room {record.room.number} — {new Date(record.date).toLocaleDateString()}</p>
+                                            <p className="text-[#e63946]">${Math.abs(record.balance).toLocaleString()}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -301,78 +307,132 @@ const WorkerDashboard = () => {
                     ))
                 )}
             </div>
+        </div>
 
-            {selectedRoom && selectedRoom.status === 'available' && (
-                <div>
-                    <h3>Check-in - Room {selectedRoom.number}</h3>
-                    <p>Price: ${selectedRoom.price}</p>
+        {/* Check-in Panel */}
+        {selectedRoom && selectedRoom.status === 'available' && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+                    <h3 className="text-lg font-bold mb-1">Check-in — Room {selectedRoom.number}</h3>
+                    <p className="text-[#a0a0a0] text-sm mb-4">Price: ${selectedRoom.price.toLocaleString()}</p>
 
-                    <button onClick={() => setShowNewClient(!showNewClient)}>
+                    <button onClick={() => setShowNewClient(!showNewClient)}
+                        className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mb-4">
                         {showNewClient ? 'Cancel' : '+ New Client'}
                     </button>
 
                     {showNewClient && (
-                        <div>
-                            <input placeholder="Name" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})} />
-                            <input placeholder="ID Number" value={newClient.idNumber} onChange={(e) => setNewClient({...newClient, idNumber: e.target.value})} />
-                            <input placeholder="Phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})} />
-                            <input placeholder="Truck Plate" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})} />
-                            <input placeholder="Email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})} />
-                            <button onClick={handleCreateClient}>Save Client</button>
+                        <div className="flex flex-col gap-2 mb-4">
+                            <input placeholder="Name" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <input placeholder="ID Number" value={newClient.idNumber} onChange={(e) => setNewClient({...newClient, idNumber: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <input placeholder="Phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <input placeholder="Truck Plate" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <input placeholder="Email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <button onClick={handleCreateClient}
+                                className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                Save Client
+                            </button>
                         </div>
                     )}
 
-                    <h4>Select client:</h4>
-                    {clients.map((client) => (
-                        <div key={client._id}>
-                            <p>{client.name} - {client.truckPlate}</p>
-                            <button onClick={() => handleCheckIn(client)}>Check-in</button>
-                        </div>
-                    ))}
-                    <button onClick={() => setSelectedRoom(null)}>Cancel</button>
+                    <p className="text-sm text-[#a0a0a0] mb-2">Select client:</p>
+                    <div className="flex flex-col gap-2 mb-4">
+                        {clients.map((client) => (
+                            <div key={client._id} className="flex justify-between items-center bg-[#2d2d2d] px-3 py-2 rounded-lg">
+                                <p className="text-sm">{client.name} — {client.truckPlate}</p>
+                                <button onClick={() => handleCheckIn(client)}
+                                    className="px-3 py-1 bg-[#4895ef] text-white text-xs rounded-lg hover:bg-[#3a7bd5] transition">
+                                    Check-in
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <button onClick={() => setSelectedRoom(null)}
+                        className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
+                        Cancel
+                    </button>
                 </div>
-            )}
+            </div>
+        )}
 
-            {selectedRoom && getOccupants(selectedRoom._id) > 0 && activeRecord && (
-                <div>
-                    <h3>Room {selectedRoom.number} - {activeRecord.client.name}</h3>
-                    <p>Room price: ${activeRecord.roomPrice}</p>
-                    <p>Consumptions: ${activeRecord.totalConsumptions}</p>
-                    <p>Total: ${activeRecord.totalDay}</p>
-                    <p>Paid: ${activeRecord.paid}</p>
-                    <p>Balance: ${activeRecord.balance}</p>
-                    <p>Total debt: ${clientDebt}</p>
-
-                    <h4>Consumptions:</h4>
-                    {consumptions.map((c) => (
-                        <div key={c._id}>
-                            <p>{c.productName} x{c.quantity} — ${c.total}</p>
+        {/* Occupied Room Panel */}
+        {selectedRoom && getOccupants(selectedRoom._id) > 0 && activeRecord && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+                <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+                    <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number} — {activeRecord.client.name}</h3>
+                    
+                    <div className="bg-[#2d2d2d] rounded-xl p-4 mb-4 text-sm">
+                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${activeRecord.roomPrice.toLocaleString()}</span></div>
+                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${activeRecord.totalConsumptions.toLocaleString()}</span></div>
+                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${activeRecord.totalDay.toLocaleString()}</span></div>
+                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${activeRecord.paid.toLocaleString()}</span></div>
+                        <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
+                            <span className="text-[#a0a0a0]">Balance</span>
+                            <span className={activeRecord.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
+                                {activeRecord.balance < 0 ? `-$${Math.abs(activeRecord.balance).toLocaleString()}` : `$${activeRecord.balance.toLocaleString()}`}
+                            </span>
                         </div>
-                    ))}
-
-                    <h4>Add consumption:</h4>
-                    {products.map((product) => (
-                        <div key={product._id}>
-                            <p>{product.name} — ${product.price}</p>
-                            <input
-                                type="number"
-                                min="1"
-                                value={quantities[product._id] || 1}
-                                onChange={(e) => setQuantities({ ...quantities, [product._id]: Number(e.target.value) })}
-                            />
-                            <button onClick={() => handleAddConsumption(product)}>Add</button>
+                        <div className="flex justify-between py-1">
+                            <span className="text-[#a0a0a0]">Total debt</span>
+                            <span className="text-[#e63946]">${clientDebt.toLocaleString()}</span>
                         </div>
-                    ))}
+                    </div>
 
-                    <button onClick={handlePartialPayment}>Register Payment</button>
+                    {consumptions.length > 0 && (
+                        <div className="mb-4">
+                            <p className="text-sm text-[#a0a0a0] mb-2">Consumptions:</p>
+                            {consumptions.map((c) => (
+                                <div key={c._id} className="flex justify-between text-sm py-1">
+                                    <p>{c.productName} x{c.quantity}</p>
+                                    <p>${c.total.toLocaleString()}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
-                    <button onClick={handleCheckOut}>Check-out</button>
+                    <p className="text-sm text-[#a0a0a0] mb-2">Add consumption:</p>
+                    <div className="flex flex-col gap-2 mb-4">
+                        {products.map((product) => (
+                            <div key={product._id} className="flex items-center justify-between bg-[#2d2d2d] px-3 py-2 rounded-lg">
+                                <p className="text-sm">{product.name} — ${product.price.toLocaleString()}</p>
+                                <div className="flex items-center gap-2">
+                                    <input type="number" min="1"
+                                        value={quantities[product._id] || 1}
+                                        onChange={(e) => setQuantities({ ...quantities, [product._id]: Number(e.target.value) })}
+                                        className="w-14 bg-[#1a1a1a] text-[#e0e0e0] px-2 py-1 rounded-lg text-sm outline-none text-center" />
+                                    <button onClick={() => handleAddConsumption(product)}
+                                        className="px-3 py-1 bg-[#4895ef] text-white text-xs rounded-lg hover:bg-[#3a7bd5] transition">
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
-                    <button onClick={() => setSelectedRoom(null)}>Close</button>
+                    <div className="flex gap-2">
+                        <button onClick={handlePartialPayment}
+                            className="flex-1 px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
+                            Register Payment
+                        </button>
+                        <button onClick={handleCheckOut}
+                            className="flex-1 px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                            Check-out
+                        </button>
+                    </div>
+                    <button onClick={() => setSelectedRoom(null)}
+                        className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
+                        Close
+                    </button>
                 </div>
-            )}
-        </div>
-    )
+            </div>
+        )}
+    </div>
+)
 }
 
 export default WorkerDashboard
