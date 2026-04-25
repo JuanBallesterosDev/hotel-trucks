@@ -13,11 +13,18 @@ const ManagementPanel = () => {
     const [products, setProducts] = useState([])
     const [showNewProduct, setShowNewProduct] = useState(false)
     const [newProduct, setNewProduct] = useState({ name: '', price: '', category: '' })
+    const [records, setRecords] = useState([])
+    const [dateFrom, setDateFrom] = useState(new Date().toISOString().split('T')[0])
+    const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0])
+    const [statusFilter, setStatusFilter] = useState('all')
+    const [searchClient, setSearchClient] = useState('')
+    const [expandedRecord, setExpandedRecord] = useState(null)
 
     useEffect(() => {
         fetchEmployees()
         fetchRooms()
         fetchProducts()
+        fetchRecords()
     }, [])
 
     const fetchEmployees = async () => {
@@ -105,6 +112,25 @@ const ManagementPanel = () => {
         } catch (error) {
             console.error(error)
         }
+    }
+
+    const fetchRecords = async () => {
+        try {
+            const res = await api.get('/records')
+            setRecords(res.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const getFilteredRecords = () => {
+        return records.filter(record => {
+            const recordDate = new Date(record.date).toISOString().split('T')[0]
+            const matchesDate = recordDate >= dateFrom && recordDate <= dateTo
+            const matchesStatus = statusFilter === 'all' || record.status === statusFilter
+            const matchesClient = record.client?.name?.toLowerCase().includes(searchClient.toLowerCase())
+            return matchesDate && matchesStatus && matchesClient
+        })
     }
 
     return(
@@ -213,7 +239,7 @@ const ManagementPanel = () => {
                     </div>
                 </div>
             )}
-            
+
             {activeSection === 'products' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
@@ -255,7 +281,64 @@ const ManagementPanel = () => {
                     </div>
                 </div>
             )}
-            {activeSection === 'records' && <p className="text-[#a0a0a0]">Records coming soon...</p>}
+            {activeSection === 'records' && (
+                <div>
+                    <h3 className="text-lg font-semibold mb-4">Records</h3>
+                    
+                    {/* Filters */}
+                    <div className="flex flex-wrap gap-3 mb-6">
+                        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none">
+                            <option value="all">All</option>
+                            <option value="active">Active</option>
+                            <option value="checkout">Checkout</option>
+                        </select>
+                        <input placeholder="Search client..." value={searchClient} onChange={(e) => setSearchClient(e.target.value)}
+                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none flex-1" />
+                    </div>
+
+                    {/* Records list */}
+                    <div className="flex flex-col gap-2">
+                        {getFilteredRecords().map((record) => (
+                            <div key={record._id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl overflow-hidden">
+                                <div className="p-4 flex justify-between items-center cursor-pointer hover:border-[#4895ef] transition"
+                                    onClick={() => setExpandedRecord(expandedRecord === record._id ? null : record._id)}>
+                                    <div>
+                                        <p className="font-medium">{record.client?.name}</p>
+                                        <p className="text-sm text-[#a0a0a0]">Room {record.room?.number} — {new Date(record.date).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm">${record.totalDay?.toLocaleString()}</p>
+                                        <p className={`text-sm font-semibold ${record.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}`}>
+                                            {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : `$${record.balance?.toLocaleString()}`}
+                                        </p>
+                                        <p className={`text-xs capitalize ${record.status === 'active' ? 'text-[#4cc9f0]' : 'text-[#a0a0a0]'}`}>{record.status}</p>
+                                    </div>
+                                </div>
+
+                                {expandedRecord === record._id && (
+                                    <div className="border-t border-[#2d2d2d] px-4 pb-4 pt-3 text-sm">
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${record.roomPrice?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${record.totalConsumptions?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${record.totalDay?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${record.paid?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
+                                            <span className="text-[#a0a0a0]">Balance</span>
+                                            <span className={record.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
+                                                {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : `$${record.balance?.toLocaleString()}`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             {activeSection === 'reports' && <p className="text-[#a0a0a0]">Reports coming soon...</p>}
         
         </div>
