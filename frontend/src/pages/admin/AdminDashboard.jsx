@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../context/AuthContext'
 import OperationsPanel from '../../components/OperationsPanel'
+import ManagementPanel from '../../components/ManagementPanel'
 import api from '../../api/axios'
 
 const AdminDashboard = () => {
@@ -83,8 +84,8 @@ const AdminDashboard = () => {
                         <OperationsPanel currentShift={currentShift} />
                     </>
                 )}
-                {activeTab === 'management' && <p className="text-[#a0a0a0]">Management panel coming soon...</p>}
-                
+                {activeTab === 'management' && <ManagementPanel />}
+
             </div>
         </div>
     )
