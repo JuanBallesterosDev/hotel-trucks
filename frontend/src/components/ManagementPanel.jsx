@@ -7,9 +7,13 @@ const ManagementPanel = () => {
     const [employees, setEmployees] = useState([])
     const [showNewEmployee, setShowNewEmployee] = useState(false)
     const [newEmployee, setNewEmployee] = useState({ name: '', username: '', password: '', role: 'worker' })
+    const [rooms, setRooms] = useState([])
+    const [showNewRoom, setShowNewRoom] = useState(false)
+    const [newRoom, setNewRoom] = useState({ number: '', type: 'single', price: '' })
 
     useEffect(() => {
         fetchEmployees()
+        fetchRooms()
     }, [])
 
     const fetchEmployees = async () => {
@@ -36,6 +40,35 @@ const ManagementPanel = () => {
         try {
             await api.delete(`/employees/${id}`)
             fetchEmployees()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const fetchRooms = async () => {
+        try {
+            const res = await api.get('/rooms')
+            setRooms(res.data)
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleCreateRoom = async () => {
+        try {
+            await api.post('/rooms', { ...newRoom, number: Number(newRoom.number), price: Number(newRoom.price) })
+            setNewRoom({ number: '', type: 'single', price: '' })
+            setShowNewRoom(false)
+            fetchRooms()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleDeactivateRoom = async (id) => {
+        try {
+            await api.delete(`/rooms/${id}`)
+            fetchRooms()
         } catch (error) {
             console.error(error)
         }
@@ -101,8 +134,52 @@ const ManagementPanel = () => {
                     </div>
                 </div>
             )}
-            
-            {activeSection === 'rooms' && <p className="text-[#a0a0a0]">Rooms coming soon...</p>}
+
+            {activeSection === 'rooms' && (
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold">Rooms</h3>
+                        <button onClick={() => setShowNewRoom(!showNewRoom)}
+                            className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                            {showNewRoom ? 'Cancel' : '+ New Room'}
+                        </button>
+                    </div>
+
+                    {showNewRoom && (
+                        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-4 flex flex-col gap-2">
+                            <input placeholder="Room number" type="number" value={newRoom.number} onChange={(e) => setNewRoom({...newRoom, number: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <select value={newRoom.type} onChange={(e) => setNewRoom({...newRoom, type: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none">
+                                <option value="single">Single</option>
+                                <option value="double">Double</option>
+                                <option value="triple">Triple</option>
+                            </select>
+                            <input placeholder="Price" type="number" value={newRoom.price} onChange={(e) => setNewRoom({...newRoom, price: e.target.value})}
+                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            <button onClick={handleCreateRoom}
+                                className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                Save Room
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="flex flex-col gap-2">
+                        {rooms.map((room) => (
+                            <div key={room._id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 flex justify-between items-center">
+                                <div>
+                                    <p className="font-medium">Room {room.number}</p>
+                                    <p className="text-sm text-[#a0a0a0] capitalize">{room.type} — ${room.price.toLocaleString()}</p>
+                                </div>
+                                <button onClick={() => handleDeactivateRoom(room._id)}
+                                    className="px-3 py-1 bg-[#e63946] text-white text-xs rounded-lg hover:opacity-80 transition">
+                                    Deactivate
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
             {activeSection === 'products' && <p className="text-[#a0a0a0]">Products coming soon...</p>}
             {activeSection === 'records' && <p className="text-[#a0a0a0]">Records coming soon...</p>}
             {activeSection === 'reports' && <p className="text-[#a0a0a0]">Reports coming soon...</p>}
