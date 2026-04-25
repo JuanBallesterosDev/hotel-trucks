@@ -33,7 +33,13 @@ const getAllRecords = async (req, res) => {
         const records = await Record.find()
             .populate('client', 'name idNumber')
             .populate('room', 'number type')
-            .populate('shift', 'employee')
+            .populate({
+                path: 'shift',
+                populate: {
+                    path: 'employee',
+                    select: 'name'
+                }
+            })
         res.json(records)
     } catch (error) {
         res.status(500).json({ message: 'Server error.' })

@@ -1,3 +1,5 @@
+import ExcelJS from 'exceljs'
+import { saveAs } from 'file-saver'
 import { useState, useEffect } from 'react'
 import api from '../api/axios'
 
@@ -19,6 +21,8 @@ const ManagementPanel = () => {
     const [statusFilter, setStatusFilter] = useState('all')
     const [searchClient, setSearchClient] = useState('')
     const [expandedRecord, setExpandedRecord] = useState(null)
+    const [reportDateFrom, setReportDateFrom] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+    const [reportDateTo, setReportDateTo] = useState(new Date().toISOString().split('T')[0])
 
     useEffect(() => {
         fetchEmployees()
@@ -131,6 +135,156 @@ const ManagementPanel = () => {
             const matchesClient = record.client?.name?.toLowerCase().includes(searchClient.toLowerCase())
             return matchesDate && matchesStatus && matchesClient
         })
+    }
+
+    const handleGenerateReport = async () => {
+        try{
+            const res = await api.get('/records')
+            const shiftsRes = await api.get('/shifts')
+
+            const filteredRecords = res.data.filter(record => {
+                const recordDate = new Date(record.date).toISOString().split('T')[0]
+                return recordDate >= reportDateFrom && recordDate <= reportDateTo
+            })
+
+            const workbook = new ExcelJS.Workbook()
+            workbook.creator = 'Hotel Trucks System'
+            workbook.created = new Date()
+
+            const summarySheet = workbook.addWorksheet('Summary')
+        
+            summarySheet.mergeCells('A1:C1')
+            summarySheet.getCell('A1').value = 'HOTEL TRUCKS — REPORT SUMMARY'
+            summarySheet.getCell('A1').font = { bold: true, size: 14 }
+            summarySheet.getCell('A1').alignment = { horizontal: 'center' }
+
+            summarySheet.addRow([])
+            summarySheet.addRow(['Generated:', new Date().toLocaleString()])
+            summarySheet.addRow(['Period:', `${reportDateFrom} to ${reportDateTo}`])
+            summarySheet.addRow([])
+
+            const totalRevenue = filteredRecords.reduce((sum, r) => sum + (r.totalDay || 0), 0)
+            const totalPaid = filteredRecords.reduce((sum, r) => sum + (r.paid || 0), 0)
+            const totalDebt = filteredRecords.reduce((sum, r) => r.balance < 0 ? sum + Math.abs(r.balance) : sum, 0)
+            const activeCount = filteredRecords.filter(r => r.status === 'active').length
+            const checkoutCount = filteredRecords.filter(r => r.status === 'checkout').length
+
+            summarySheet.addRow(['TOTALS', '', ''])
+            summarySheet.addRow(['Total Revenue', totalRevenue])
+            summarySheet.addRow(['Total Collected', totalPaid])
+            summarySheet.addRow(['Total Pending Debt', totalDebt])
+            summarySheet.addRow(['Active Records', activeCount])
+            summarySheet.addRow(['Checkout Records', checkoutCount])
+            summarySheet.addRow(['Total Records', filteredRecords.length])
+
+            summarySheet.getColumn(1).width = 25
+            summarySheet.getColumn(2).width = 20
+
+            // ─── HOJA 2: DETALLE DE TRANSACCIONES ───
+            const detailSheet = workbook.addWorksheet('Transactions')
+
+            detailSheet.columns = [
+                { header: 'Date & Time', key: 'date', width: 20 },
+                { header: 'Record ID', key: 'id', width: 28 },
+                { header: 'Client', key: 'client', width: 25 },
+                { header: 'Room', key: 'room', width: 10 },
+                { header: 'Room Type', key: 'roomType', width: 12 },
+                { header: 'Room Price', key: 'roomPrice', width: 15 },
+                { header: 'Consumptions', key: 'consumptions', width: 15 },
+                { header: 'Total', key: 'total', width: 15 },
+                { header: 'Paid', key: 'paid', width: 15 },
+                { header: 'Balance', key: 'balance', width: 15 },
+                { header: 'Status', key: 'status', width: 12 },
+                { header: 'Employee', key: 'shift', width: 20 },
+            ]
+
+            // Style header
+            detailSheet.getRow(1).font = { bold: true }
+            detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D2D2D' } }
+            detailSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            detailSheet.autoFilter = { from: 'A1', to: 'L1' }
+            detailSheet.views = [{ state: 'frozen', ySplit: 1 }]
+
+            filteredRecords.forEach(record => {
+                const row = detailSheet.addRow({
+                    date: new Date(record.date).toLocaleString(),
+                    id: record._id,
+                    client: record.client?.name || 'N/A',
+                    room: record.room?.number || 'N/A',
+                    roomType: record.room?.type || 'N/A',
+                    roomPrice: record.roomPrice,
+                    consumptions: record.totalConsumptions,
+                    total: record.totalDay,
+                    paid: record.paid,
+                    balance: record.balance,
+                    status: record.status,
+                    shift: record.shift?.employee?.name || 'N/A'
+                })
+
+                // Color balance negativo en rojo
+                if (record.balance < 0) {
+                    row.getCell('balance').font = { color: { argb: 'FFE63946' } }
+                }
+
+                // Format currency cells
+                ;['roomPrice', 'consumptions', 'total', 'paid', 'balance'].forEach(key => {
+                    row.getCell(key).numFmt = '$#,##0'
+                })
+            })
+
+            // Totals row
+            const lastRow = filteredRecords.length + 2
+            detailSheet.addRow([])
+            const totalsRow = detailSheet.addRow({
+                date: 'TOTALS',
+                roomPrice: { formula: `SUM(F2:F${lastRow})` },
+                consumptions: { formula: `SUM(G2:G${lastRow})` },
+                total: { formula: `SUM(H2:H${lastRow})` },
+                paid: { formula: `SUM(I2:I${lastRow})` },
+                balance: { formula: `SUM(J2:J${lastRow})` },
+            })
+            totalsRow.font = { bold: true }
+
+            // ─── HOJA 3: DEUDAS PENDIENTES ───
+            const debtsSheet = workbook.addWorksheet('Pending Debts')
+
+            debtsSheet.columns = [
+                { header: 'Client', key: 'client', width: 25 },
+                { header: 'Room', key: 'room', width: 10 },
+                { header: 'Date', key: 'date', width: 15 },
+                { header: 'Total', key: 'total', width: 15 },
+                { header: 'Paid', key: 'paid', width: 15 },
+                { header: 'Debt', key: 'debt', width: 15 },
+                { header: 'Status', key: 'status', width: 12 },
+            ]
+
+            debtsSheet.getRow(1).font = { bold: true }
+            debtsSheet.views = [{ state: 'frozen', ySplit: 1 }]
+
+            const debtRecords = res.data.filter(r => r.balance < 0)
+            debtRecords.forEach(record => {
+                const row = debtsSheet.addRow({
+                    client: record.client?.name || 'N/A',
+                    room: record.room?.number || 'N/A',
+                    date: new Date(record.date).toLocaleDateString(),
+                    total: record.totalDay,
+                    paid: record.paid,
+                    debt: Math.abs(record.balance),
+                    status: record.status
+                })
+                row.getCell('debt').font = { color: { argb: 'FFE63946' } }
+                ;['total', 'paid', 'debt'].forEach(key => {
+                    row.getCell(key).numFmt = '$#,##0'
+                })
+            })
+
+            const buffer = await workbook.xlsx.writeBuffer()
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+            saveAs(blob, `hotel-trucks-report-${reportDateFrom}-to-${reportDateTo}.xlsx`)
+
+        } catch (error) {
+            console.error(error)
+        }
     }
 
     return(
@@ -281,6 +435,7 @@ const ManagementPanel = () => {
                     </div>
                 </div>
             )}
+
             {activeSection === 'records' && (
                 <div>
                     <h3 className="text-lg font-semibold mb-4">Records</h3>
@@ -339,7 +494,33 @@ const ManagementPanel = () => {
                     </div>
                 </div>
             )}
-            {activeSection === 'reports' && <p className="text-[#a0a0a0]">Reports coming soon...</p>}
+
+            {activeSection === 'reports' && (
+                <div>
+                    <h3 className="text-lg font-semibold mb-4">Reports</h3>
+                    <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6">
+                        <p className="text-[#a0a0a0] text-sm mb-4">Generate an Excel report for the accountant.</p>
+                        
+                        <div className="flex flex-wrap gap-3 mb-6">
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs text-[#a0a0a0]">From</label>
+                                <input type="date" value={reportDateFrom} onChange={(e) => setReportDateFrom(e.target.value)}
+                                    className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs text-[#a0a0a0]">To</label>
+                                <input type="date" value={reportDateTo} onChange={(e) => setReportDateTo(e.target.value)}
+                                    className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                            </div>
+                        </div>
+
+                        <button onClick={handleGenerateReport}
+                            className="px-6 py-3 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                            Download Excel Report
+                        </button>
+                    </div>
+                </div>
+            )}
         
         </div>
     )
