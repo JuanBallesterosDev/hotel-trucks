@@ -22,6 +22,7 @@ const OperationsPanel = ({ currentShift }) => {
     const [selectedRecord, setSelectedRecord] = useState(null)
     const [errors, setErrors] = useState({ name: false, idNumber: false, phone: false })
     const [showCheckIn, setShowCheckIn] = useState(false)
+    const [showMoveRoom, setShowMoveRoom] = useState(false)
 
     useEffect(() => {
         fetchRooms()
@@ -246,6 +247,24 @@ const OperationsPanel = ({ currentShift }) => {
             alert("Could not delete consumption");
         }
     };
+
+    const handleMoveRoom = async (newRoom) => {
+        try {
+            await api.put(`/records/${activeRecord._id}/move`, {
+                newRoom: newRoom._id,
+                roomPrice: customPrice ? Number(customPrice) : newRoom.price
+            })
+            setShowMoveRoom(false)
+            setSelectedRoom(null)
+            setSelectedRecord(null)
+            setActiveRecord(null)
+            setCustomPrice('')
+            fetchRooms()
+            fetchActiveRecords()
+        } catch (error) {
+            console.error(error)
+        }
+    }
 
     return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e0e0e0]">
@@ -503,6 +522,46 @@ const OperationsPanel = ({ currentShift }) => {
                                     Check-out
                                 </button>
                             </div>
+                            <button onClick={() => setShowMoveRoom(true)}
+                                className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
+                                Move to another room
+                            </button>
+
+                            {showMoveRoom && (
+                                <div className="mt-4 border-t border-[#2d2d2d] pt-4">
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Select new room:</p>
+                                    <div className="flex flex-col gap-1 mb-3">
+                                        <label className="text-xs text-[#a0a0a0]">Custom price (leave empty to use room default)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Custom price"
+                                            value={customPrice}
+                                            onChange={(e) => setCustomPrice(e.target.value)}
+                                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        {rooms
+                                            .filter(r => r._id !== selectedRoom._id && getOccupants(r._id) < getCapacity(r.type))
+                                            .map((room) => (
+                                                <div key={room._id}
+                                                    onClick={() => handleMoveRoom(room)}
+                                                    className="bg-[#2d2d2d] px-4 py-3 rounded-lg cursor-pointer hover:bg-[#3d3d3d] transition flex justify-between items-center">
+                                                    <div>
+                                                        <p className="font-medium text-sm">Room {room.number}</p>
+                                                        <p className="text-xs text-[#a0a0a0] capitalize">{room.type} — ${room.price.toLocaleString()}</p>
+                                                    </div>
+                                                    <span className="text-sm text-[#4cc9f0]">{getOccupants(room._id)}/{getCapacity(room.type)}</span>
+                                                </div>
+                                            ))}
+                                    </div>
+                                    <button onClick={() => setShowMoveRoom(false)}
+                                        className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+
                             <button onClick={() => { setSelectedRoom(null); setSelectedRecord(null); setActiveRecord(null) }}
                                 className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
                                 Close

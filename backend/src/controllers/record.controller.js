@@ -190,7 +190,35 @@ const registerPayment = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error.' })
     }
+
+}
+
+const moveRecord = async (req, res) => {
+    try {
+        const record = await Record.findById(req.params.id)
+        if (!record) {
+            return res.status(404).json({ message: 'Record not found.' })
+        }
+
+        const oldRoomId = record.room
+        const newRoomId = req.body.newRoom
+
+        record.room = newRoomId
+        record.roomPrice = req.body.roomPrice || record.roomPrice
+        await record.save()
+
+        const activeInOldRoom = await Record.find({ room: oldRoomId, status: 'active' })
+        if (activeInOldRoom.length === 0) {
+            await Room.findByIdAndUpdate(oldRoomId, { status: 'available' })
+        }
+
+        await Room.findByIdAndUpdate(newRoomId, { status: 'occupied' })
+
+        res.json(record)
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' })
+    }
 }
 
 
-module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment }
+module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment, moveRecord }
