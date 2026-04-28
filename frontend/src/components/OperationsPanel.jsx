@@ -6,6 +6,7 @@ import api from '../api/axios'
 const OperationsPanel = ({ currentShift }) => {
     const [rooms, setRooms] = useState([])
     const [selectedRoom, setSelectedRoom] = useState(null)
+    const [customPrice, setCustomPrice] =   useState('')
     const [clients, setClients] = useState([])
     const [activeRecords, setActiveRecords] = useState([])
     const [activeRecord, setActiveRecord] = useState(null)
@@ -17,6 +18,10 @@ const OperationsPanel = ({ currentShift }) => {
     const [selectedDebtor, setSelectedDebtor] = useState(null)
     const [showNewClient, setShowNewClient] = useState(false)
     const [newClient, setNewClient] = useState({ name: '', idNumber: '', phone: '', truckPlate: '', email: '' })
+    const [roomRecords, setRoomRecords] = useState([])
+    const [selectedRecord, setSelectedRecord] = useState(null)
+    const [errors, setErrors] = useState({ name: false, idNumber: false, phone: false })
+    const [showCheckIn, setShowCheckIn] = useState(false)
 
     useEffect(() => {
         fetchRooms()
@@ -111,9 +116,11 @@ const OperationsPanel = ({ currentShift }) => {
             await api.post('/records', {
                 client: client._id,
                 room: selectedRoom._id,
-                roomPrice: selectedRoom.price
+                roomPrice: customPrice ? Number(customPrice) : selectedRoom.price
             })
             setSelectedRoom(null)
+            setCustomPrice('')
+            setShowCheckIn(false)
             fetchRooms()
             fetchActiveRecords()
         } 
@@ -155,26 +162,48 @@ const OperationsPanel = ({ currentShift }) => {
     }
 
     const handleRoomClick = async (room) => {
+        setShowCheckIn(false)
         setSelectedRoom(room)
+        setSelectedRecord(null)
+        setActiveRecord(null)
+        setConsumptions([])
+
         const occupants = getOccupants(room._id)
-        if (occupants > 0) {
+        if (occupants === 0) {
+            setShowCheckIn(true)
+        }
+        else{
             const recordsInRoom = activeRecords.filter(r => r.room._id.toString() === room._id.toString())
-            if(recordsInRoom.length > 0){
-                const record = recordsInRoom[0]
-                setActiveRecord(recordsInRoom[0])
-                fetchConsumptions(recordsInRoom[0]._id)
-                if(record.client &&  record.client._id  )
-                    fetchClientDebt(record.client._id)
-            }
-            
+            setRoomRecords(recordsInRoom)
+        }
+    }
+
+    const handleSelectRecord = async (record) => {
+        setSelectedRecord(record)
+        setActiveRecord(record)
+        fetchConsumptions(record._id)
+        if (record.client && record.client._id) {
+            fetchClientDebt(record.client._id)
         }
     }
 
     const handleCreateClient = async () => {
+        const newErrors = {
+            name: !newClient.name.trim(),
+            idNumber: !newClient.idNumber.trim(),
+            phone: !newClient.phone.trim()
+        }
+
+        setErrors(newErrors)
+
+        if(Object.values(newErrors).some(err => err)){
+            return
+        }
         try {
             const res = await api.post('/clients', newClient)
             setClients([...clients, res.data])
             setNewClient({ name: '', idNumber: '', phone: '', truckPlate: '', email: '' })
+            setErrors({ name: false, idNumber: false, phone: false })
             setShowNewClient(false)
         } catch (error) {
             console.error(error)
@@ -195,10 +224,28 @@ const OperationsPanel = ({ currentShift }) => {
             fetchConsumptions(activeRecord._id)
             fetchActiveRecords()
             setQuantities({})
+            fetchClientDebt(activeRecord.client._id)
         } catch (error) {
             console.error(error)
         }
     }
+
+    const handleDeleteConsumption = async (consumptionId) => {
+        if (!window.confirm('Are you sure you want to delete this consumption?')) return;
+        
+        try {
+            await api.delete(`/consumptions/${consumptionId}`);
+            
+            const res = await api.get(`/records/${activeRecord._id}`);
+            setActiveRecord(res.data);
+            fetchConsumptions(activeRecord._id);
+            fetchActiveRecords();
+            fetchClientDebt(activeRecord.client._id)
+        } catch (error) {
+            console.error("Error deleting consumption:", error);
+            alert("Could not delete consumption");
+        }
+    };
 
     return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e0e0e0]">
@@ -259,11 +306,22 @@ const OperationsPanel = ({ currentShift }) => {
         </div>
 
         {/* Check-in Panel */}
-        {selectedRoom && selectedRoom.status === 'available' && (
+        {showCheckIn && selectedRoom && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                 <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
                     <h3 className="text-lg font-bold mb-1">Check-in — Room {selectedRoom.number}</h3>
                     <p className="text-[#a0a0a0] text-sm mb-4">Price: ${selectedRoom.price.toLocaleString()}</p>
+
+                    <div className="flex flex-col gap-1 mb-4">
+                        <label className="text-xs text-[#a0a0a0]">Custom price (leave empty to use default)</label>
+                        <input
+                            type="number"
+                            placeholder={selectedRoom.price}
+                            value={customPrice}
+                            onChange={(e) => setCustomPrice(e.target.value)}
+                            className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none"
+                        />
+                    </div>
 
                     <button onClick={() => setShowNewClient(!showNewClient)}
                         className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mb-4">
@@ -271,19 +329,48 @@ const OperationsPanel = ({ currentShift }) => {
                     </button>
 
                     {showNewClient && (
-                        <div className="flex flex-col gap-2 mb-4">
-                            <input placeholder="Name" value={newClient.name} onChange={(e) => setNewClient({...newClient, name: e.target.value})}
-                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="ID Number" value={newClient.idNumber} onChange={(e) => setNewClient({...newClient, idNumber: e.target.value})}
-                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Phone" value={newClient.phone} onChange={(e) => setNewClient({...newClient, phone: e.target.value})}
-                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Truck Plate" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})}
-                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Email" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})}
-                                className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                        <div className="flex flex-col gap-3 mb-4 border-b border-[#2d2d2d] pb-4">
+                            <div>
+                                <input placeholder="Name *" value={newClient.name} 
+                                    onChange={(e) => {
+                                        setNewClient({...newClient, name: e.target.value})
+                                        if (errors.name) setErrors({...errors, name: false})
+                                    }}
+                                    className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.name ? 'border-[#e63946]' : 'border-transparent'}`} 
+                                />
+                                {errors.name && <p className="text-[#e63946] text-xs mt-1 ml-1">Name is required</p>}
+                            </div>
+
+                            <div>
+                                <input placeholder="ID Number *" value={newClient.idNumber} 
+                                    onChange={(e) => {
+                                        setNewClient({...newClient, idNumber: e.target.value})
+                                        if (errors.idNumber) setErrors({...errors, idNumber: false})
+                                    }}
+                                    className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.idNumber ? 'border-[#e63946]' : 'border-transparent'}`} 
+                                />
+                                {errors.idNumber && <p className="text-[#e63946] text-xs mt-1 ml-1">ID is required</p>}
+                            </div>
+
+                            
+                            <div>
+                                <input placeholder="Phone *" value={newClient.phone} 
+                                    onChange={(e) => {
+                                        setNewClient({...newClient, phone: e.target.value})
+                                        if (errors.phone) setErrors({...errors, phone: false})
+                                    }}
+                                    className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.phone ? 'border-[#e63946]' : 'border-transparent'}`} 
+                                />
+                                {errors.phone && <p className="text-[#e63946] text-xs mt-1 ml-1">Phone is required</p>}
+                            </div>
+
+                            <input placeholder="Truck Plate (Optional)" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})}
+                                className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border border-transparent" />
+                            <input placeholder="Email (Optional)" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                                className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border border-transparent" />
+
                             <button onClick={handleCreateClient}
-                                className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                className="w-full px-4 py-2 mt-2 bg-[#4895ef] text-white text-sm font-medium rounded-lg hover:bg-[#3a7bd5] transition">
                                 Save Client
                             </button>
                         </div>
@@ -301,7 +388,7 @@ const OperationsPanel = ({ currentShift }) => {
                             </div>
                         ))}
                     </div>
-                    <button onClick={() => setSelectedRoom(null)}
+                    <button onClick={() => { setShowCheckIn(false); if(getOccupants(selectedRoom._id) === 0) setSelectedRoom(null) }}
                         className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
                         Cancel
                     </button>
@@ -310,77 +397,123 @@ const OperationsPanel = ({ currentShift }) => {
         )}
 
         {/* Occupied Room Panel */}
-        {selectedRoom && getOccupants(selectedRoom._id) > 0 && activeRecord && (
+        {selectedRoom && !showCheckIn && getOccupants(selectedRoom._id) > 0 && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                 <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
-                    <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number} — {activeRecord.client.name}</h3>
                     
-                    <div className="bg-[#2d2d2d] rounded-xl p-4 mb-4 text-sm">
-                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${activeRecord.roomPrice.toLocaleString()}</span></div>
-                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${activeRecord.totalConsumptions.toLocaleString()}</span></div>
-                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${activeRecord.totalDay.toLocaleString()}</span></div>
-                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${activeRecord.paid.toLocaleString()}</span></div>
-                        <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
-                            <span className="text-[#a0a0a0]">Balance</span>
-                            <span className={activeRecord.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
-                                {activeRecord.balance < 0 ? `-$${Math.abs(activeRecord.balance).toLocaleString()}` : `$${activeRecord.balance.toLocaleString()}`}
-                            </span>
-                        </div>
-                        <div className="flex justify-between py-1">
-                            <span className="text-[#a0a0a0]">Total debt</span>
-                            <span className="text-[#e63946]">${clientDebt.toLocaleString()}</span>
-                        </div>
-                    </div>
+                    {!selectedRecord ? (
+                        
+                        <div>
+                            <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number}</h3>
+                            <p className="text-[#a0a0a0] text-sm mb-4">{getOccupants(selectedRoom._id)}/{getCapacity(selectedRoom.type)} occupied</p>
 
-                    {consumptions.length > 0 && (
-                        <div className="mb-4">
-                            <p className="text-sm text-[#a0a0a0] mb-2">Consumptions:</p>
-                            {consumptions.map((c) => (
-                                <div key={c._id} className="flex justify-between text-sm py-1">
-                                    <p>{c.productName} x{c.quantity}</p>
-                                    <p>${c.total.toLocaleString()}</p>
+                            <p className="text-sm text-[#a0a0a0] mb-2">Guests:</p>
+                            <div className="flex flex-col gap-2 mb-4">
+                                {roomRecords.map((record) => (
+                                    <div key={record._id}
+                                        onClick={() => handleSelectRecord(record)}
+                                        className="bg-[#2d2d2d] px-4 py-3 rounded-lg cursor-pointer hover:bg-[#3d3d3d] transition flex justify-between items-center">
+                                        <div>
+                                            <p className="font-medium text-sm">{record.client?.name}</p>
+                                            <p className="text-xs text-[#a0a0a0]">${record.roomPrice?.toLocaleString()} / night</p>
+                                        </div>
+                                        <span className="text-[#e63946] text-sm font-semibold">
+                                            {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : '✓'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {getOccupants(selectedRoom._id) < getCapacity(selectedRoom.type) && (
+                                <button onClick={() => setShowCheckIn(true)}
+                                    className="w-full px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition mb-2">
+                                    + Add Guest
+                                </button>
+                            )}
+
+                            <button onClick={() => { setSelectedRoom(null); setRoomRecords([]) }}
+                                className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
+                                Close
+                            </button>
+                        </div>
+                    ) : (
+                         
+                        <div>
+                            <button onClick={() => { setSelectedRecord(null); setActiveRecord(null) }}
+                                className="text-[#a0a0a0] text-sm mb-4 hover:text-[#e0e0e0] transition">
+                                ← Back
+                            </button>
+                            <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number} — {activeRecord?.client?.name}</h3>
+                            
+                            <div className="bg-[#2d2d2d] rounded-xl p-4 mb-4 text-sm">
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${activeRecord?.roomPrice?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${activeRecord?.totalConsumptions?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${activeRecord?.totalDay?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${activeRecord?.paid?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
+                                    <span className="text-[#a0a0a0]">Balance</span>
+                                    <span className={activeRecord?.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
+                                        {activeRecord?.balance < 0 ? `-$${Math.abs(activeRecord?.balance).toLocaleString()}` : `$${activeRecord?.balance?.toLocaleString()}`}
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <p className="text-sm text-[#a0a0a0] mb-2">Add consumption:</p>
-                    <div className="flex flex-col gap-2 mb-4">
-                        {products.map((product) => (
-                            <div key={product._id} className="flex items-center justify-between bg-[#2d2d2d] px-3 py-2 rounded-lg">
-                                <p className="text-sm">{product.name} — ${product.price.toLocaleString()}</p>
-                                <div className="flex items-center gap-2">
-                                    <input type="number" min="1"
-                                        value={quantities[product._id] || 1}
-                                        onChange={(e) => setQuantities({ ...quantities, [product._id]: Number(e.target.value) })}
-                                        className="w-14 bg-[#1a1a1a] text-[#e0e0e0] px-2 py-1 rounded-lg text-sm outline-none text-center" />
-                                    <button onClick={() => handleAddConsumption(product)}
-                                        className="px-3 py-1 bg-[#4895ef] text-white text-xs rounded-lg hover:bg-[#3a7bd5] transition">
-                                        Add
-                                    </button>
+                                <div className="flex justify-between py-1">
+                                    <span className="text-[#a0a0a0]">Total debt</span>
+                                    <span className="text-[#e63946]">${clientDebt.toLocaleString()}</span>
                                 </div>
                             </div>
-                        ))}
-                    </div>
 
-                    <div className="flex gap-2">
-                        <button onClick={handlePartialPayment}
-                            className="flex-1 px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
-                            Register Payment
-                        </button>
-                        <button onClick={handleCheckOut}
-                            className="flex-1 px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                            Check-out
-                        </button>
-                    </div>
-                    <button onClick={() => setSelectedRoom(null)}
-                        className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
-                        Close
-                    </button>
+                            {consumptions.length > 0 && (
+                                <div className="mb-4">
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Consumptions:</p>
+                                    {consumptions.map((c) => (
+                                        <div key={c._id} className="flex justify-between text-sm py-1">
+                                            <p>{c.productName} x{c.quantity}</p>
+                                            <p>${c.total.toLocaleString()}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <p className="text-sm text-[#a0a0a0] mb-2">Add consumption:</p>
+                            <div className="flex flex-col gap-2 mb-4">
+                                {products.map((product) => (
+                                    <div key={product._id} className="flex items-center justify-between bg-[#2d2d2d] px-3 py-2 rounded-lg">
+                                        <p className="text-sm">{product.name} — ${product.price.toLocaleString()}</p>
+                                        <div className="flex items-center gap-2">
+                                            <input type="number" min="1"
+                                                value={quantities[product._id] || 1}
+                                                onChange={(e) => setQuantities({ ...quantities, [product._id]: Number(e.target.value) })}
+                                                className="w-14 bg-[#1a1a1a] text-[#e0e0e0] px-2 py-1 rounded-lg text-sm outline-none text-center" />
+                                            <button onClick={() => handleAddConsumption(product)}
+                                                className="px-3 py-1 bg-[#4895ef] text-white text-xs rounded-lg hover:bg-[#3a7bd5] transition">
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex gap-2">
+                                <button onClick={handlePartialPayment}
+                                    className="flex-1 px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
+                                    Register Payment
+                                </button>
+                                <button onClick={handleCheckOut}
+                                    className="flex-1 px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                    Check-out
+                                </button>
+                            </div>
+                            <button onClick={() => { setSelectedRoom(null); setSelectedRecord(null); setActiveRecord(null) }}
+                                className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
+                                Close
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
-        )}
+        )}        
     </div>
+          
 )
 }
 

@@ -13,7 +13,7 @@ const Login = () => {
     const handleSubmit = async(e) => {
     e.preventDefault()
     try{
-        const res = await api.post('/auth/login', { username, password })
+        const res = await api.post('/auth/login', { username: username.trim(), password: password.trim() })
         login(res.data.employee, res.data.token)
         if(res.data.employee.role === 'admin'){
             navigate('/admin')
