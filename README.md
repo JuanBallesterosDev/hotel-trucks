@@ -5,7 +5,7 @@ A full-stack hotel management system built for a truck driver hotel in Colombia.
 ## Tech Stack
 
 - **Frontend:** React + Vite + Tailwind CSS → Deployed on Vercel
-- **Backend:** Node.js + Express → Deployed on Railway
+- **Backend:** Node.js + Express → Deployed on Render
 - **Database:** MongoDB Atlas
 - **Auth:** JWT + bcryptjs
 
