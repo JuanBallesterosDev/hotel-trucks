@@ -4,10 +4,9 @@ import { useAuth } from '../context/AuthContext'
 const PrivateRoute = ({ children, role }) => {
     const { employee, token } = useAuth()
 
-    if (!token) return <Navigate to="/login" />
-    if (role && employee.role !== role) return <Navigate to="/login" />
+    if (loading) return <div>Cargando sesión...</div>;
+    return employee ? children : <Navigate to="/login" />;
 
-    return children
 }
 
 export default PrivateRoute
