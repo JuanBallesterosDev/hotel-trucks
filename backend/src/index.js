@@ -9,9 +9,9 @@
     const app = express()
 
     const allowedOrigins = [
-        'http://localhost:5173',               // Desarrollo local
-        'http://192.168.2.65:5173',            // Tu móvil (según tu terminal)
-        'https://hotel-trucks.vercel.app'      // <--- Reemplaza con tu URL real de Vercel
+        'http://localhost:5173',               
+        'http://192.168.2.65:5173',            
+        'https://hotel-trucks.vercel.app'      
     ];
 
     app.use(cors({
