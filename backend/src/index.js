@@ -8,7 +8,26 @@
 
     const app = express()
 
-    app.use(cors())
+    const allowedOrigins = [
+        'http://localhost:5173',               // Desarrollo local
+        'http://192.168.2.65:5173',            // Tu móvil (según tu terminal)
+        'https://hotel-trucks.vercel.app'      // <--- Reemplaza con tu URL real de Vercel
+    ];
+
+    app.use(cors({
+        origin: function (origin, callback) {
+            
+            if (!origin) return callback(null, true);
+            
+            if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+            } else {
+            console.log("Origen bloqueado por CORS:", origin);
+            callback(new Error('Not allowed by CORS'));
+            }
+        },
+        credentials: true
+    }));
     app.use(express.json())
     app.use('/api/auth', require('./routes/auth.routes'))
     app.use('/api/rooms', require('./routes/room.routes'))
