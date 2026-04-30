@@ -23,7 +23,7 @@ const WorkerDashboard = () => {
     }
 
     const handleOpenShift = async () => {
-        const initialCash = prompt('Enter initial cash amount:')
+        const initialCash = prompt('Digite monto de dinero inicial:')
         if (!initialCash) return
         try {
             const res = await api.post('/shifts', { initialCash: Number(initialCash) })
@@ -34,7 +34,7 @@ const WorkerDashboard = () => {
     }
 
     const handleCloseShift = async () => {
-        const finalCash = prompt('Enter final cash amount:')
+        const finalCash = prompt('Digite monto de dinero final:')
         if (!finalCash) return
         try {
             await api.put(`/shifts/${currentShift._id}/close`, { finalCash: Number(finalCash) })
@@ -51,15 +51,15 @@ const WorkerDashboard = () => {
         
         {/* Navbar */}
         <nav className="flex items-center justify-between px-8 py-4 bg-[#1a1a1a] border-b border-[#2d2d2d]">
-            <h1 className="text-2xl font-bold tracking-wide">Hotel Trucks</h1>
+            <h1 className="text-2xl font-bold tracking-wide">Hotel Rodrigo</h1>
             <div className="flex items-center gap-4">
-                <span className="text-sm text-[#a0a0a0]">Welcome, {employee.name}</span>
+                <span className="text-sm text-[#a0a0a0]">Bienvenido, {employee.name}</span>
                     {currentShift ? (
-                        <button onClick={handleCloseShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Close Shift</button>
+                        <button onClick={handleCloseShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Cerrar Turno</button>
                     ) : (
-                        <button onClick={handleOpenShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Open Shift</button>
+                        <button onClick={handleOpenShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Abrir Turno</button>
                     )}
-                    <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Logout</button>
+                    <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Cerrar Sesión</button>
             </div>
         </nav>
         <OperationsPanel currentShift={currentShift} />

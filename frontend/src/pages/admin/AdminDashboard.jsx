@@ -23,7 +23,7 @@ const AdminDashboard = () => {
     }
 
     const handleOpenShift = async () => {
-        const initialCash = prompt('Enter initial cash amount:')
+        const initialCash = prompt('Digite monto de dinero inicial:')
         if (!initialCash) return
         try {
             const res = await api.post('/shifts', { initialCash: Number(initialCash) })
@@ -34,7 +34,7 @@ const AdminDashboard = () => {
     }
 
     const handleCloseShift = async () => {
-        const finalCash = prompt('Enter final cash amount:')
+        const finalCash = prompt('Digite monto de dinero final:')
         if (!finalCash) return
         try {
             await api.put(`/shifts/${currentShift._id}/close`, { finalCash: Number(finalCash) })
@@ -52,7 +52,7 @@ const AdminDashboard = () => {
                 <h1 className="text-2xl font-bold tracking-wide">Hotel Trucks</h1>
                 <div className="flex items-center gap-4">
                     <span className="text-sm text-[#a0a0a0]">Admin: {employee.name}</span>
-                    <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Logout</button>
+                    <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Cerrar Sesión</button>
                 </div>
             </nav>
 
@@ -61,12 +61,12 @@ const AdminDashboard = () => {
                 <button
                     onClick={() => setActiveTab('operations')}
                     className={`px-6 py-3 text-sm font-medium transition border-b-2 ${activeTab === 'operations' ? 'border-[#4895ef] text-[#4895ef]' : 'border-transparent text-[#a0a0a0] hover:text-[#e0e0e0]'}`}>
-                    Operations
+                    Operaciones
                 </button>
                 <button
                     onClick={() => setActiveTab('management')}
                     className={`px-6 py-3 text-sm font-medium transition border-b-2 ${activeTab === 'management' ? 'border-[#4895ef] text-[#4895ef]' : 'border-transparent text-[#a0a0a0] hover:text-[#e0e0e0]'}`}>
-                    Management
+                    Administración
                 </button>
             </div>
 
@@ -74,11 +74,11 @@ const AdminDashboard = () => {
                 {activeTab === 'operations' && (
                     <>
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-xl font-semibold">Operations</h2>
+                            <h2 className="text-xl font-semibold">Operaciones</h2>
                             {currentShift ? (
-                                <button onClick={handleCloseShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Close Shift</button>
+                                <button onClick={handleCloseShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Cerrar Turno</button>
                             ) : (
-                                <button onClick={handleOpenShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Open Shift</button>
+                                <button onClick={handleOpenShift} className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">Abrir Turno</button>
                             )}
                         </div>
                         <OperationsPanel currentShift={currentShift} />

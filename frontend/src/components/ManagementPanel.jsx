@@ -5,7 +5,7 @@ import api from '../api/axios'
 
 const ManagementPanel = () => {
     const [activeSection, setActiveSection] = useState('employees')
-    const sections = ['employees', 'rooms', 'products', 'records', 'reports']
+    const sections = ['empleados', 'habitaciones', 'productos', 'records', 'reportes']
     const [employees, setEmployees] = useState([])
     const [showNewEmployee, setShowNewEmployee] = useState(false)
     const [newEmployee, setNewEmployee] = useState({ name: '', username: '', password: '', role: 'worker' })
@@ -301,32 +301,32 @@ const ManagementPanel = () => {
                 ))}
             </div>
 
-            {activeSection === 'employees' && (
+            {activeSection === 'empleados' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Employees</h3>
+                        <h3 className="text-lg font-semibold">Empleados</h3>
                         <button onClick={() => setShowNewEmployee(!showNewEmployee)}
                             className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                            {showNewEmployee ? 'Cancel' : '+ New Employee'}
+                            {showNewEmployee ? 'Cancelar' : '+ Nuevo Empleado'}
                         </button>
                     </div>
 
                     {showNewEmployee && (
                         <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-4 flex flex-col gap-2">
-                            <input placeholder="Name" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                            <input placeholder="Nombre" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Username" value={newEmployee.username} onChange={(e) => setNewEmployee({...newEmployee, username: e.target.value})}
+                            <input placeholder="Usuario" value={newEmployee.username} onChange={(e) => setNewEmployee({...newEmployee, username: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Password" type="password" value={newEmployee.password} onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
+                            <input placeholder="Contraseña" type="password" value={newEmployee.password} onChange={(e) => setNewEmployee({...newEmployee, password: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none">
-                                <option value="worker">Worker</option>
+                                <option value="worker">Empleado</option>
                                 <option value="admin">Admin</option>
                             </select>
                             <button onClick={handleCreateEmployee}
                                 className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                                Save Employee
+                                Guardar Empleado
                             </button>
                         </div>
                     )}
@@ -340,7 +340,7 @@ const ManagementPanel = () => {
                                 </div>
                                 <button onClick={() => handleDeactivateEmployee(emp._id)}
                                     className="px-3 py-1 bg-[#e63946] text-white text-xs rounded-lg hover:opacity-80 transition">
-                                    Deactivate
+                                    Desactivar
                                 </button>
                             </div>
                         ))}
@@ -348,31 +348,31 @@ const ManagementPanel = () => {
                 </div>
             )}
 
-            {activeSection === 'rooms' && (
+            {activeSection === 'habitaciones' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Rooms</h3>
+                        <h3 className="text-lg font-semibold">Habitaciones</h3>
                         <button onClick={() => setShowNewRoom(!showNewRoom)}
                             className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                            {showNewRoom ? 'Cancel' : '+ New Room'}
+                            {showNewRoom ? 'Cancelar' : '+ Nueva Habitación'}
                         </button>
                     </div>
 
                     {showNewRoom && (
                         <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-4 flex flex-col gap-2">
-                            <input placeholder="Room number" type="number" value={newRoom.number} onChange={(e) => setNewRoom({...newRoom, number: e.target.value})}
+                            <input placeholder="Número de habitación" type="number" value={newRoom.number} onChange={(e) => setNewRoom({...newRoom, number: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             <select value={newRoom.type} onChange={(e) => setNewRoom({...newRoom, type: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none">
-                                <option value="single">Single</option>
-                                <option value="double">Double</option>
-                                <option value="triple">Triple</option>
+                                <option value="single">1 Cama</option>
+                                <option value="double">2 Camas</option>
+                                <option value="triple">3 Camas</option>
                             </select>
                             <input placeholder="Price" type="number" value={newRoom.price} onChange={(e) => setNewRoom({...newRoom, price: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             <button onClick={handleCreateRoom}
                                 className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                                Save Room
+                                Guardar Habitación
                             </button>
                         </div>
                     )}
@@ -381,12 +381,12 @@ const ManagementPanel = () => {
                         {rooms.map((room) => (
                             <div key={room._id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 flex justify-between items-center">
                                 <div>
-                                    <p className="font-medium">Room {room.number}</p>
+                                    <p className="font-medium">Habitación {room.number}</p>
                                     <p className="text-sm text-[#a0a0a0] capitalize">{room.type} — ${room.price.toLocaleString()}</p>
                                 </div>
                                 <button onClick={() => handleDeactivateRoom(room._id)}
                                     className="px-3 py-1 bg-[#e63946] text-white text-xs rounded-lg hover:opacity-80 transition">
-                                    Deactivate
+                                    Desactivar
                                 </button>
                             </div>
                         ))}
@@ -394,10 +394,10 @@ const ManagementPanel = () => {
                 </div>
             )}
 
-            {activeSection === 'products' && (
+            {activeSection === 'productos' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-semibold">Products</h3>
+                        <h3 className="text-lg font-semibold">Productos</h3>
                         <button onClick={() => setShowNewProduct(!showNewProduct)}
                             className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
                             {showNewProduct ? 'Cancel' : '+ New Product'}
@@ -406,15 +406,15 @@ const ManagementPanel = () => {
 
                     {showNewProduct && (
                         <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-4 flex flex-col gap-2">
-                            <input placeholder="Name" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
+                            <input placeholder="Nombre" value={newProduct.name} onChange={(e) => setNewProduct({...newProduct, name: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Price" type="number" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
+                            <input placeholder="Precio" type="number" value={newProduct.price} onChange={(e) => setNewProduct({...newProduct, price: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
-                            <input placeholder="Category" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
+                            <input placeholder="Categoria" value={newProduct.category} onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             <button onClick={handleCreateProduct}
                                 className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                                Save Product
+                                Guardar Producto
                             </button>
                         </div>
                     )}
@@ -428,7 +428,7 @@ const ManagementPanel = () => {
                                 </div>
                                 <button onClick={() => handleDeactivateProduct(product._id)}
                                     className="px-3 py-1 bg-[#e63946] text-white text-xs rounded-lg hover:opacity-80 transition">
-                                    Deactivate
+                                    Desactivar
                                 </button>
                             </div>
                         ))}
@@ -448,8 +448,8 @@ const ManagementPanel = () => {
                             className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                         <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
                             className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none">
-                            <option value="all">All</option>
-                            <option value="active">Active</option>
+                            <option value="all">Todo</option>
+                            <option value="active">Activo</option>
                             <option value="checkout">Checkout</option>
                         </select>
                         <input placeholder="Search client..." value={searchClient} onChange={(e) => setSearchClient(e.target.value)}
@@ -477,12 +477,12 @@ const ManagementPanel = () => {
 
                                 {expandedRecord === record._id && (
                                     <div className="border-t border-[#2d2d2d] px-4 pb-4 pt-3 text-sm">
-                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${record.roomPrice?.toLocaleString()}</span></div>
-                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${record.totalConsumptions?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Precio Habitación</span><span>${record.roomPrice?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumos</span><span>${record.totalConsumptions?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${record.totalDay?.toLocaleString()}</span></div>
-                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${record.paid?.toLocaleString()}</span></div>
+                                        <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Pagado</span><span>${record.paid?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
-                                            <span className="text-[#a0a0a0]">Balance</span>
+                                            <span className="text-[#a0a0a0]">Saldo</span>
                                             <span className={record.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
                                                 {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : `$${record.balance?.toLocaleString()}`}
                                             </span>
@@ -495,20 +495,20 @@ const ManagementPanel = () => {
                 </div>
             )}
 
-            {activeSection === 'reports' && (
+            {activeSection === 'reportes' && (
                 <div>
                     <h3 className="text-lg font-semibold mb-4">Reports</h3>
                     <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6">
-                        <p className="text-[#a0a0a0] text-sm mb-4">Generate an Excel report for the accountant.</p>
+                        <p className="text-[#a0a0a0] text-sm mb-4">Genera un reporte Excel completo con todos los registros para el contador.</p>
                         
                         <div className="flex flex-wrap gap-3 mb-6">
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-[#a0a0a0]">From</label>
+                                <label className="text-xs text-[#a0a0a0]">Desde</label>
                                 <input type="date" value={reportDateFrom} onChange={(e) => setReportDateFrom(e.target.value)}
                                     className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-xs text-[#a0a0a0]">To</label>
+                                <label className="text-xs text-[#a0a0a0]">Hasta</label>
                                 <input type="date" value={reportDateTo} onChange={(e) => setReportDateTo(e.target.value)}
                                     className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
                             </div>
@@ -516,7 +516,7 @@ const ManagementPanel = () => {
 
                         <button onClick={handleGenerateReport}
                             className="px-6 py-3 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
-                            Download Excel Report
+                            Descargar Reporte Excel
                         </button>
                     </div>
                 </div>

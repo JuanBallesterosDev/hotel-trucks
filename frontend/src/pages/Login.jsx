@@ -23,7 +23,7 @@ const Login = () => {
         }
     }
     catch(error){
-        setError('Invalid username or password.')
+        setError('Usuario o contraseña incorrectos.')
     }
 }
 
@@ -33,28 +33,28 @@ return (
             
             {/* Logo / Title */}
             <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-[#e0e0e0] tracking-wide">Hotel Trucks</h1>
-                <p className="text-[#a0a0a0] text-sm mt-2">Sign in to continue</p>
+                <h1 className="text-3xl font-bold text-[#e0e0e0] tracking-wide">Hotel Rodrigo</h1>
+                <p className="text-[#a0a0a0] text-sm mt-2">Iniciar sesión para continuar</p>
             </div>
 
             {/* Card */}
             <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-8">
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-[#a0a0a0]">Username</label>
+                        <label className="text-xs text-[#a0a0a0]">Usuario</label>
                         <input
                             type="text"
-                            placeholder="Enter your username"
+                            placeholder="Ingresa tu usuario"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             className="bg-[#2d2d2d] text-[#e0e0e0] px-4 py-3 rounded-lg text-sm outline-none focus:border focus:border-[#4895ef] transition"
                         />
                     </div>
                     <div className="flex flex-col gap-1">
-                        <label className="text-xs text-[#a0a0a0]">Password</label>
+                        <label className="text-xs text-[#a0a0a0]">Contraseña</label>
                         <input
                             type="password"
-                            placeholder="Enter your password"
+                            placeholder="Ingresa tu contraseña"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="bg-[#2d2d2d] text-[#e0e0e0] px-4 py-3 rounded-lg text-sm outline-none focus:border focus:border-[#4895ef] transition"
@@ -63,7 +63,7 @@ return (
                     {error && <p className="text-[#e63946] text-xs">{error}</p>}
                     <button type="submit"
                         className="px-4 py-3 bg-[#4895ef] text-white text-sm font-medium rounded-lg hover:bg-[#3a7bd5] transition mt-2">
-                        Sign In
+                        Iniciar Sesión
                     </button>
                 </form>
             </div>

@@ -30,6 +30,12 @@ const OperationsPanel = ({ currentShift }) => {
         fetchActiveRecords()
         fetchProducts()
         fetchDebts()
+
+        const interval = setInterval(() => {
+            fetchRooms()
+            fetchActiveRecords()
+            fetchDebts()
+        }, 30000)
     }, [])
 
     const fetchRooms = async () => {
@@ -98,9 +104,9 @@ const OperationsPanel = ({ currentShift }) => {
     }
     
     const getCapacity = (type) => {
-        if(type === 'single') return 1
-        if(type === 'double') return 2
-        if(type === 'triple') return 3
+        if(type === 'Una cama') return 1
+        if(type === 'Dos camas') return 2
+        if(type === 'Tres camas') return 3
         return 1
     }
 
@@ -110,7 +116,7 @@ const OperationsPanel = ({ currentShift }) => {
 
     const handleCheckIn = async (client) => {
         if (!currentShift) {
-            alert('You must open a shift first.')
+            alert('Debe de iniciar un turno primero.')
             return
         }
         try {
@@ -131,7 +137,7 @@ const OperationsPanel = ({ currentShift }) => {
     }
 
     const handleCheckOut = async () => {
-        const paid = prompt('Enter amount paid:')
+        const paid = prompt('Digite el valor pagado:')
         if (paid === null) return
         try {
             await api.put(`/records/${activeRecord._id}/checkout`, { paid: Number(paid) })
@@ -147,7 +153,7 @@ const OperationsPanel = ({ currentShift }) => {
     }
 
     const handlePartialPayment = async () => {
-        const payment = prompt('Enter payment amount:')
+        const payment = prompt('Digite el valor pagado:')
         if (payment === null) return
         try {
             await api.post(`/records/client/${activeRecord.client._id}/payment`, { 
@@ -232,7 +238,7 @@ const OperationsPanel = ({ currentShift }) => {
     }
 
     const handleDeleteConsumption = async (consumptionId) => {
-        if (!window.confirm('Are you sure you want to delete this consumption?')) return;
+        if (!window.confirm('¿Seguro de borrar este consumo?')) return;
         
         try {
             await api.delete(`/consumptions/${consumptionId}`);
@@ -243,8 +249,8 @@ const OperationsPanel = ({ currentShift }) => {
             fetchActiveRecords();
             fetchClientDebt(activeRecord.client._id)
         } catch (error) {
-            console.error("Error deleting consumption:", error);
-            alert("Could not delete consumption");
+            console.error("Error al borrar el consumo:", error);
+            alert("No se pudo borrar el consumo");
         }
     };
 
@@ -272,7 +278,7 @@ const OperationsPanel = ({ currentShift }) => {
         <div className="px-8 py-6">
 
             {/* Rooms */}
-            <h2 className="text-xl font-semibold mb-4">Rooms</h2>
+            <h2 className="text-xl font-semibold mb-4">Habitaciones</h2>
             <div className="flex flex-wrap gap-4 mb-8">
                 {rooms.map((room) => {
                     const occupants = getOccupants(room._id)
@@ -284,7 +290,7 @@ const OperationsPanel = ({ currentShift }) => {
                         <div key={room._id}
                             onClick={() => handleRoomClick(room)}
                             className={`${bgColor} p-4 rounded-xl cursor-pointer w-36 text-white hover:opacity-90 transition`}>
-                            <p className="font-bold text-lg">Room {room.number}</p>
+                            <p className="font-bold text-lg">Habitacion {room.number}</p>
                             <p className="text-sm capitalize">{room.type}</p>
                             <p className="text-sm">${room.price.toLocaleString()}</p>
                             <p className="text-sm font-semibold mt-1">{occupants}/{capacity}</p>
@@ -294,10 +300,10 @@ const OperationsPanel = ({ currentShift }) => {
             </div>
 
             {/* Debts */}
-            <h2 className="text-xl font-semibold mb-4">Debts</h2>
+            <h2 className="text-xl font-semibold mb-4">Deudas</h2>
             <div className="mb-8">
                 {debts.length === 0 ? (
-                    <p className="text-[#a0a0a0] text-sm">No debts registered.</p>
+                    <p className="text-[#a0a0a0] text-sm">No deudas registradas.</p>
                 ) : (
                     debts.map((debtor) => (
                         <div key={debtor.client._id}
@@ -305,11 +311,11 @@ const OperationsPanel = ({ currentShift }) => {
                             className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-2 cursor-pointer hover:border-[#4895ef] transition">
                             <div className="flex justify-between items-center">
                                 <p className="font-medium">{debtor.client.name}</p>
-                                <p className="text-[#e63946] font-semibold">Owes: ${debtor.totalDebt.toLocaleString()}</p>
+                                <p className="text-[#e63946] font-semibold">Debe: ${debtor.totalDebt.toLocaleString()}</p>
                             </div>
                             {selectedDebtor?.client._id === debtor.client._id && (
                                 <div className="mt-3 border-t border-[#2d2d2d] pt-3">
-                                    <p className="text-sm text-[#a0a0a0] mb-2">History:</p>
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Historial:</p>
                                     {debtor.records.map((record) => (
                                         <div key={record._id} className="flex justify-between text-sm py-1">
                                             <p>Room {record.room.number} — {new Date(record.date).toLocaleDateString()}</p>
@@ -328,11 +334,11 @@ const OperationsPanel = ({ currentShift }) => {
         {showCheckIn && selectedRoom && (
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
                 <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
-                    <h3 className="text-lg font-bold mb-1">Check-in — Room {selectedRoom.number}</h3>
-                    <p className="text-[#a0a0a0] text-sm mb-4">Price: ${selectedRoom.price.toLocaleString()}</p>
+                    <h3 className="text-lg font-bold mb-1">Check-in — Habitacion {selectedRoom.number}</h3>
+                    <p className="text-[#a0a0a0] text-sm mb-4">Precio: ${selectedRoom.price.toLocaleString()}</p>
 
                     <div className="flex flex-col gap-1 mb-4">
-                        <label className="text-xs text-[#a0a0a0]">Custom price (leave empty to use default)</label>
+                        <label className="text-xs text-[#a0a0a0]">Precio personalizado (dejar vacio para usar el precio base)</label>
                         <input
                             type="number"
                             placeholder={selectedRoom.price}
@@ -344,58 +350,58 @@ const OperationsPanel = ({ currentShift }) => {
 
                     <button onClick={() => setShowNewClient(!showNewClient)}
                         className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mb-4">
-                        {showNewClient ? 'Cancel' : '+ New Client'}
+                        {showNewClient ? 'Cancelar' : '+ Nuevo Cliente'}
                     </button>
 
                     {showNewClient && (
                         <div className="flex flex-col gap-3 mb-4 border-b border-[#2d2d2d] pb-4">
                             <div>
-                                <input placeholder="Name *" value={newClient.name} 
+                                <input placeholder="Nombre *" value={newClient.name} 
                                     onChange={(e) => {
                                         setNewClient({...newClient, name: e.target.value})
                                         if (errors.name) setErrors({...errors, name: false})
                                     }}
                                     className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.name ? 'border-[#e63946]' : 'border-transparent'}`} 
                                 />
-                                {errors.name && <p className="text-[#e63946] text-xs mt-1 ml-1">Name is required</p>}
+                                {errors.name && <p className="text-[#e63946] text-xs mt-1 ml-1">Name es requerido</p>}
                             </div>
 
                             <div>
-                                <input placeholder="ID Number *" value={newClient.idNumber} 
+                                <input placeholder="Cédula *" value={newClient.idNumber} 
                                     onChange={(e) => {
                                         setNewClient({...newClient, idNumber: e.target.value})
                                         if (errors.idNumber) setErrors({...errors, idNumber: false})
                                     }}
                                     className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.idNumber ? 'border-[#e63946]' : 'border-transparent'}`} 
                                 />
-                                {errors.idNumber && <p className="text-[#e63946] text-xs mt-1 ml-1">ID is required</p>}
+                                {errors.idNumber && <p className="text-[#e63946] text-xs mt-1 ml-1">Cédula es requerido</p>}
                             </div>
 
                             
                             <div>
-                                <input placeholder="Phone *" value={newClient.phone} 
+                                <input placeholder="Teléfono *" value={newClient.phone} 
                                     onChange={(e) => {
                                         setNewClient({...newClient, phone: e.target.value})
                                         if (errors.phone) setErrors({...errors, phone: false})
                                     }}
                                     className={`w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border transition-colors ${errors.phone ? 'border-[#e63946]' : 'border-transparent'}`} 
                                 />
-                                {errors.phone && <p className="text-[#e63946] text-xs mt-1 ml-1">Phone is required</p>}
+                                {errors.phone && <p className="text-[#e63946] text-xs mt-1 ml-1">Teléfono es requerido</p>}
                             </div>
 
-                            <input placeholder="Truck Plate (Optional)" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})}
+                            <input placeholder="Placa (Opcional)" value={newClient.truckPlate} onChange={(e) => setNewClient({...newClient, truckPlate: e.target.value})}
                                 className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border border-transparent" />
-                            <input placeholder="Email (Optional)" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})}
+                            <input placeholder="Email (Opcional)" value={newClient.email} onChange={(e) => setNewClient({...newClient, email: e.target.value})}
                                 className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none border border-transparent" />
 
                             <button onClick={handleCreateClient}
                                 className="w-full px-4 py-2 mt-2 bg-[#4895ef] text-white text-sm font-medium rounded-lg hover:bg-[#3a7bd5] transition">
-                                Save Client
+                                Guardar Cliente
                             </button>
                         </div>
                     )}
 
-                    <p className="text-sm text-[#a0a0a0] mb-2">Select client:</p>
+                    <p className="text-sm text-[#a0a0a0] mb-2">Seleccionar cliente:</p>
                     <div className="flex flex-col gap-2 mb-4">
                         {clients.map((client) => (
                             <div key={client._id} className="flex justify-between items-center bg-[#2d2d2d] px-3 py-2 rounded-lg">
@@ -409,7 +415,7 @@ const OperationsPanel = ({ currentShift }) => {
                     </div>
                     <button onClick={() => { setShowCheckIn(false); if(getOccupants(selectedRoom._id) === 0) setSelectedRoom(null) }}
                         className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
-                        Cancel
+                        Cancelar
                     </button>
                 </div>
             </div>
@@ -423,10 +429,10 @@ const OperationsPanel = ({ currentShift }) => {
                     {!selectedRecord ? (
                         
                         <div>
-                            <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number}</h3>
-                            <p className="text-[#a0a0a0] text-sm mb-4">{getOccupants(selectedRoom._id)}/{getCapacity(selectedRoom.type)} occupied</p>
+                            <h3 className="text-lg font-bold mb-1">Habitación {selectedRoom.number}</h3>
+                            <p className="text-[#a0a0a0] text-sm mb-4">{getOccupants(selectedRoom._id)}/{getCapacity(selectedRoom.type)} ocupada</p>
 
-                            <p className="text-sm text-[#a0a0a0] mb-2">Guests:</p>
+                            <p className="text-sm text-[#a0a0a0] mb-2">Huéspedes:</p>
                             <div className="flex flex-col gap-2 mb-4">
                                 {roomRecords.map((record) => (
                                     <div key={record._id}
@@ -434,7 +440,7 @@ const OperationsPanel = ({ currentShift }) => {
                                         className="bg-[#2d2d2d] px-4 py-3 rounded-lg cursor-pointer hover:bg-[#3d3d3d] transition flex justify-between items-center">
                                         <div>
                                             <p className="font-medium text-sm">{record.client?.name}</p>
-                                            <p className="text-xs text-[#a0a0a0]">${record.roomPrice?.toLocaleString()} / night</p>
+                                            <p className="text-xs text-[#a0a0a0]">${record.roomPrice?.toLocaleString()} / noche</p>
                                         </div>
                                         <span className="text-[#e63946] text-sm font-semibold">
                                             {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : '✓'}
@@ -446,13 +452,13 @@ const OperationsPanel = ({ currentShift }) => {
                             {getOccupants(selectedRoom._id) < getCapacity(selectedRoom.type) && (
                                 <button onClick={() => setShowCheckIn(true)}
                                     className="w-full px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition mb-2">
-                                    + Add Guest
+                                    + Agregar Huésped
                                 </button>
                             )}
 
                             <button onClick={() => { setSelectedRoom(null); setRoomRecords([]) }}
                                 className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
-                                Close
+                                Cerrar
                             </button>
                         </div>
                     ) : (
@@ -460,30 +466,30 @@ const OperationsPanel = ({ currentShift }) => {
                         <div>
                             <button onClick={() => { setSelectedRecord(null); setActiveRecord(null) }}
                                 className="text-[#a0a0a0] text-sm mb-4 hover:text-[#e0e0e0] transition">
-                                ← Back
+                                ← Atras
                             </button>
-                            <h3 className="text-lg font-bold mb-1">Room {selectedRoom.number} — {activeRecord?.client?.name}</h3>
+                            <h3 className="text-lg font-bold mb-1">Habitacion {selectedRoom.number} — {activeRecord?.client?.name}</h3>
                             
                             <div className="bg-[#2d2d2d] rounded-xl p-4 mb-4 text-sm">
-                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Room price</span><span>${activeRecord?.roomPrice?.toLocaleString()}</span></div>
-                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumptions</span><span>${activeRecord?.totalConsumptions?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Precio habitación</span><span>${activeRecord?.roomPrice?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumos</span><span>${activeRecord?.totalConsumptions?.toLocaleString()}</span></div>
                                 <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${activeRecord?.totalDay?.toLocaleString()}</span></div>
-                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Paid</span><span>${activeRecord?.paid?.toLocaleString()}</span></div>
+                                <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Pagado</span><span>${activeRecord?.paid?.toLocaleString()}</span></div>
                                 <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
-                                    <span className="text-[#a0a0a0]">Balance</span>
+                                    <span className="text-[#a0a0a0]">Saldo</span>
                                     <span className={activeRecord?.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
                                         {activeRecord?.balance < 0 ? `-$${Math.abs(activeRecord?.balance).toLocaleString()}` : `$${activeRecord?.balance?.toLocaleString()}`}
                                     </span>
                                 </div>
                                 <div className="flex justify-between py-1">
-                                    <span className="text-[#a0a0a0]">Total debt</span>
+                                    <span className="text-[#a0a0a0]">Deuda total</span>
                                     <span className="text-[#e63946]">${clientDebt.toLocaleString()}</span>
                                 </div>
                             </div>
 
                             {consumptions.length > 0 && (
                                 <div className="mb-4">
-                                    <p className="text-sm text-[#a0a0a0] mb-2">Consumptions:</p>
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Consumos:</p>
                                     {consumptions.map((c) => (
                                         <div key={c._id} className="flex justify-between text-sm py-1">
                                             <p>{c.productName} x{c.quantity}</p>
@@ -493,7 +499,7 @@ const OperationsPanel = ({ currentShift }) => {
                                 </div>
                             )}
 
-                            <p className="text-sm text-[#a0a0a0] mb-2">Add consumption:</p>
+                            <p className="text-sm text-[#a0a0a0] mb-2">Agregar consumo:</p>
                             <div className="flex flex-col gap-2 mb-4">
                                 {products.map((product) => (
                                     <div key={product._id} className="flex items-center justify-between bg-[#2d2d2d] px-3 py-2 rounded-lg">
@@ -505,7 +511,7 @@ const OperationsPanel = ({ currentShift }) => {
                                                 className="w-14 bg-[#1a1a1a] text-[#e0e0e0] px-2 py-1 rounded-lg text-sm outline-none text-center" />
                                             <button onClick={() => handleAddConsumption(product)}
                                                 className="px-3 py-1 bg-[#4895ef] text-white text-xs rounded-lg hover:bg-[#3a7bd5] transition">
-                                                Add
+                                                Agregar
                                             </button>
                                         </div>
                                     </div>
@@ -515,7 +521,7 @@ const OperationsPanel = ({ currentShift }) => {
                             <div className="flex gap-2">
                                 <button onClick={handlePartialPayment}
                                     className="flex-1 px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
-                                    Register Payment
+                                    Registrar Pago
                                 </button>
                                 <button onClick={handleCheckOut}
                                     className="flex-1 px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
@@ -524,17 +530,17 @@ const OperationsPanel = ({ currentShift }) => {
                             </div>
                             <button onClick={() => setShowMoveRoom(true)}
                                 className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
-                                Move to another room
+                                Mover a otra habitación
                             </button>
 
                             {showMoveRoom && (
                                 <div className="mt-4 border-t border-[#2d2d2d] pt-4">
-                                    <p className="text-sm text-[#a0a0a0] mb-2">Select new room:</p>
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Seleccionar nueva habitación:</p>
                                     <div className="flex flex-col gap-1 mb-3">
-                                        <label className="text-xs text-[#a0a0a0]">Custom price (leave empty to use room default)</label>
+                                        <label className="text-xs text-[#a0a0a0]">Precio personalizado (dejar vacío para usar el precio base)</label>
                                         <input
-                                            type="number"
-                                            placeholder="Custom price"
+                                            type="numero"
+                                            placeholder="Precio personalizado"
                                             value={customPrice}
                                             onChange={(e) => setCustomPrice(e.target.value)}
                                             className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none"
@@ -548,7 +554,7 @@ const OperationsPanel = ({ currentShift }) => {
                                                     onClick={() => handleMoveRoom(room)}
                                                     className="bg-[#2d2d2d] px-4 py-3 rounded-lg cursor-pointer hover:bg-[#3d3d3d] transition flex justify-between items-center">
                                                     <div>
-                                                        <p className="font-medium text-sm">Room {room.number}</p>
+                                                        <p className="font-medium text-sm">Habitación {room.number}</p>
                                                         <p className="text-xs text-[#a0a0a0] capitalize">{room.type} — ${room.price.toLocaleString()}</p>
                                                     </div>
                                                     <span className="text-sm text-[#4cc9f0]">{getOccupants(room._id)}/{getCapacity(room.type)}</span>
@@ -557,14 +563,14 @@ const OperationsPanel = ({ currentShift }) => {
                                     </div>
                                     <button onClick={() => setShowMoveRoom(false)}
                                         className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
-                                        Cancel
+                                        Cancelar
                                     </button>
                                 </div>
                             )}
 
                             <button onClick={() => { setSelectedRoom(null); setSelectedRecord(null); setActiveRecord(null) }}
                                 className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
-                                Close
+                                Cerrar
                             </button>
                         </div>
                     )}
