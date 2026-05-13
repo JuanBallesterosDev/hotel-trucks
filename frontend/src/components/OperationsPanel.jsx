@@ -106,7 +106,7 @@ const OperationsPanel = ({ currentShift }) => {
     const getCapacity = (type) => {
         if(type === 'single') return 1
         if(type === 'double') return 2
-        if(type === 'tirple') return 3
+        if(type === 'triple') return 3
         return 1
     }
 
