@@ -11,8 +11,9 @@
     const allowedOrigins = [
         'http://localhost:5173',               
         'http://192.168.2.65:5173',            
-        'https://hotel-trucks.vercel.app'      
-    ];
+        'https://hotel-trucks.vercel.app',
+        process.env.ALLOWED_ORIGIN
+    ].filter(Boolean);
 
     app.use(cors({
         origin: function (origin, callback) {
