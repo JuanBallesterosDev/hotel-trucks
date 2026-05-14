@@ -367,6 +367,7 @@ const ManagementPanel = () => {
                                 <option value="single">1 Cama</option>
                                 <option value="double">2 Camas</option>
                                 <option value="triple">3 Camas</option>
+                                <option value="quadruple">4 Camas</option>
                             </select>
                             <input placeholder="Price" type="number" value={newRoom.price} onChange={(e) => setNewRoom({...newRoom, price: e.target.value})}
                                 className="bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />

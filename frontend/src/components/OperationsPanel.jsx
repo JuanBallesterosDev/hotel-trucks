@@ -107,6 +107,7 @@ const OperationsPanel = ({ currentShift }) => {
         if(type === 'single') return 1
         if(type === 'double') return 2
         if(type === 'triple') return 3
+        if(type === 'quadruple') return 4
         return 1
     }
 
