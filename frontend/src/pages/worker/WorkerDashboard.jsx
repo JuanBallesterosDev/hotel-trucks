@@ -51,7 +51,7 @@ const WorkerDashboard = () => {
         
         {/* Navbar */}
         <nav className="flex items-center justify-between px-8 py-4 bg-[#1a1a1a] border-b border-[#2d2d2d]">
-            <h1 className="text-2xl font-bold tracking-wide">Hotel Rodrigo</h1>
+            <h1 className="text-2xl font-bold tracking-wide">{import.meta.env.VITE_HOTEL_NAME}</h1>
             <div className="flex items-center gap-4">
                 <span className="text-sm text-[#a0a0a0]">Bienvenido, {employee.name}</span>
                     {currentShift ? (

@@ -33,7 +33,7 @@ return (
             
             {/* Logo / Title */}
             <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-[#e0e0e0] tracking-wide">Hotel Rodrigo</h1>
+                <h1 className="text-3xl font-bold text-[#e0e0e0] tracking-wide">{import.meta.env.VITE_HOTEL_NAME}</h1>
                 <p className="text-[#a0a0a0] text-sm mt-2">Iniciar sesión para continuar</p>
             </div>
 

@@ -49,7 +49,7 @@ const AdminDashboard = () => {
             
             {/* Navbar */}
             <nav className="flex items-center justify-between px-8 py-4 bg-[#1a1a1a] border-b border-[#2d2d2d]">
-                <h1 className="text-2xl font-bold tracking-wide">Hotel Trucks</h1>
+                <h1 className="text-2xl font-bold tracking-wide">{import.meta.env.VITE_HOTEL_NAME}</h1>
                 <div className="flex items-center gap-4">
                     <span className="text-sm text-[#a0a0a0]">Admin: {employee.name}</span>
                     <button onClick={logout} className="px-4 py-2 bg-[#2d2d2d] text-[#e0e0e0] text-sm rounded-lg hover:bg-[#3d3d3d] transition">Cerrar Sesión</button>
