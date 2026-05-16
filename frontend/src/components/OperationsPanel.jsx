@@ -170,6 +170,7 @@ const OperationsPanel = ({ currentShift }) => {
             fetchRooms()
             fetchActiveRecords()
             fetchDebts()
+            fetchShiftSummary()
         } catch (error) {
             console.error(error)
         }
@@ -185,7 +186,8 @@ const OperationsPanel = ({ currentShift }) => {
             const updated = await api.get(`/records/${activeRecord._id}`)
             setActiveRecord(updated.data)
             fetchDebts()
-            fetchClientDebt(activeRecord.client._id)            
+            fetchClientDebt(activeRecord.client._id) 
+            fetchShiftSummary()           
         } catch (error) {
             console.error(error)
         }
