@@ -114,6 +114,7 @@ const OperationsPanel = ({ currentShift }) => {
     const fetchShiftSummary = async () => {
         try {
             const res = await api.get('/shifts/current')
+            console.log('shiftSummary:', res.data)
             setShiftSummary(res.data)
             if (res.data) {
                 const expensesRes = await api.get(`/shifts/${res.data._id}/expenses`)
@@ -365,7 +366,7 @@ const OperationsPanel = ({ currentShift }) => {
                     {showExpenses && (
                         <div className="mt-4 border-t border-[#2d2d2d] pt-4">
                             <p className="text-sm text-[#a0a0a0] mb-3">Registrar gasto:</p>
-                            <div className="flex gap-2 mb-4">
+                            <div className="flex flex-col sm:flex-row gap-2 mb-4">
                                 <input placeholder="Descripción" value={newExpense.description}
                                     onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
                                     className="flex-1 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
@@ -379,7 +380,7 @@ const OperationsPanel = ({ currentShift }) => {
                             </div>
 
                             <p className="text-sm text-[#a0a0a0] mb-3 mt-4">Registrar ingreso:</p>
-                            <div className="flex gap-2 mb-4">
+                            <div className="flex flex-col sm:flex-row gap-2 mb-4">
                                 <input placeholder="Descripción" value={newIncome.description}
                                     onChange={(e) => setNewIncome({...newIncome, description: e.target.value})}
                                     className="flex-1 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
