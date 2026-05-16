@@ -134,6 +134,12 @@ const checkOut = async (req, res) => {
         record.status = 'checkout'
         await record.save()
 
+        const shift = await Shift.findById(record.shift)
+        if (shift && shift.status === 'open') {
+            shift.totalCollected += req.body.paid || 0
+            await shift.save()
+        }
+
         const activeRecords = await Record.find({
             room: record.room,
             status: 'active'
@@ -184,6 +190,15 @@ const registerPayment = async (req, res) => {
                 payment = 0
             }
             await record.save()
+        }
+
+        const activeShift = await Shift.findOne({ 
+            employee: req.employee._id, 
+            status: 'open' 
+        })
+        if (activeShift) {
+            activeShift.totalCollected += req.body.amount
+            await activeShift.save()
         }
 
         res.json({ message: 'Payment registered successfully.' })

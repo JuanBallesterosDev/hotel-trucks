@@ -8,6 +8,7 @@ const shiftSchema = new mongoose.Schema({
     initialCash: { type: Number, required: true },
     finalCash: { type: Number },
     totalCollected: {type: Number, default: 0 },
+    totalExpenses: { type: Number, default: 0 },
     cashDifference: { type: Number},
     status: { type: String, enum: ['open', 'closed'], default: 'open' },
     note: { type: String },

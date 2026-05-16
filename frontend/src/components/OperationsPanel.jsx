@@ -23,6 +23,11 @@ const OperationsPanel = ({ currentShift }) => {
     const [errors, setErrors] = useState({ name: false, idNumber: false, phone: false })
     const [showCheckIn, setShowCheckIn] = useState(false)
     const [showMoveRoom, setShowMoveRoom] = useState(false)
+    const [shiftSummary, setShiftSummary] = useState(null)
+    const [expenses, setExpenses] = useState([])
+    const [showExpenses, setShowExpenses] = useState(false)
+    const [newExpense, setNewExpense] = useState({ description: '', amount: '' })
+    const [newIncome, setNewIncome] = useState({ description: '', amount: '' })
 
     useEffect(() => {
         fetchRooms()
@@ -30,12 +35,15 @@ const OperationsPanel = ({ currentShift }) => {
         fetchActiveRecords()
         fetchProducts()
         fetchDebts()
+        fetchShiftSummary()
 
         const interval = setInterval(() => {
             fetchRooms()
             fetchActiveRecords()
             fetchDebts()
         }, 30000)
+
+        return () => clearInterval(interval)
     }, [])
 
     const fetchRooms = async () => {
@@ -100,6 +108,19 @@ const OperationsPanel = ({ currentShift }) => {
             setDebts(res.data)
         } catch (error) {
             console.error(error)
+        }
+    }
+
+    const fetchShiftSummary = async () => {
+        try {
+            const res = await api.get('/shifts/current')
+            setShiftSummary(res.data)
+            if (res.data) {
+                const expensesRes = await api.get(`/shifts/${res.data._id}/expenses`)
+                setExpenses(expensesRes.data)
+            }
+        } catch (error) {
+            setShiftSummary(null)
         }
     }
     
@@ -273,6 +294,36 @@ const OperationsPanel = ({ currentShift }) => {
         }
     }
 
+    const handleAddExpense = async () => {
+        if (!newExpense.description || !newExpense.amount) return
+        try {
+            const res = await api.post('/shifts/expenses', {
+                description: newExpense.description,
+                amount: Number(newExpense.amount)
+            })
+            setNewExpense({ description: '', amount: '' })
+            setShiftSummary(res.data.shift)
+            fetchShiftSummary()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const handleAddIncome = async () => {
+        if (!newIncome.description || !newIncome.amount) return
+        try {
+            const res = await api.post('/shifts/income', {
+                description: newIncome.description,
+                amount: Number(newIncome.amount)
+            })
+            setNewIncome({ description: '', amount: '' })
+            setShiftSummary(res.data.shift)
+            fetchShiftSummary()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e0e0e0]">
         
@@ -280,6 +331,82 @@ const OperationsPanel = ({ currentShift }) => {
 
             {/* Rooms */}
             <h2 className="text-xl font-semibold mb-4">Habitaciones</h2>
+            {/* Resumen de caja */}
+            {shiftSummary && (
+                <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 mb-8">
+                    <div className="flex justify-between items-center mb-3">
+                        <h2 className="text-lg font-semibold">Resumen de Caja</h2>
+                        <button onClick={() => setShowExpenses(!showExpenses)}
+                            className="px-3 py-1 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
+                            {showExpenses ? 'Ocultar gastos' : 'Ver gastos'}
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div className="bg-[#2d2d2d] rounded-lg p-3">
+                            <p className="text-[#a0a0a0]">Caja inicial</p>
+                            <p className="font-semibold text-lg">${shiftSummary.initialCash?.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-[#2d2d2d] rounded-lg p-3">
+                            <p className="text-[#a0a0a0]">Ingresos</p>
+                            <p className="font-semibold text-lg text-[#4cc9f0]">+${shiftSummary.totalCollected?.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-[#2d2d2d] rounded-lg p-3">
+                            <p className="text-[#a0a0a0]">Gastos</p>
+                            <p className="font-semibold text-lg text-[#e63946]">-${shiftSummary.totalExpenses?.toLocaleString()}</p>
+                        </div>
+                        <div className="bg-[#2d2d2d] rounded-lg p-3">
+                            <p className="text-[#a0a0a0]">Dinero actual</p>
+                            <p className="font-semibold text-lg text-[#4895ef]">
+                                ${(shiftSummary.initialCash + shiftSummary.totalCollected - shiftSummary.totalExpenses)?.toLocaleString()}
+                            </p>
+                        </div>
+                    </div>
+
+                    {showExpenses && (
+                        <div className="mt-4 border-t border-[#2d2d2d] pt-4">
+                            <p className="text-sm text-[#a0a0a0] mb-3">Registrar gasto:</p>
+                            <div className="flex gap-2 mb-4">
+                                <input placeholder="Descripción" value={newExpense.description}
+                                    onChange={(e) => setNewExpense({...newExpense, description: e.target.value})}
+                                    className="flex-1 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                                <input placeholder="Monto" type="number" value={newExpense.amount}
+                                    onChange={(e) => setNewExpense({...newExpense, amount: e.target.value})}
+                                    className="w-32 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                                <button onClick={handleAddExpense}
+                                    className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                    Agregar
+                                </button>
+                            </div>
+
+                            <p className="text-sm text-[#a0a0a0] mb-3 mt-4">Registrar ingreso:</p>
+                            <div className="flex gap-2 mb-4">
+                                <input placeholder="Descripción" value={newIncome.description}
+                                    onChange={(e) => setNewIncome({...newIncome, description: e.target.value})}
+                                    className="flex-1 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                                <input placeholder="Monto" type="number" value={newIncome.amount}
+                                    onChange={(e) => setNewIncome({...newIncome, amount: e.target.value})}
+                                    className="w-32 bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none" />
+                                <button onClick={handleAddIncome}
+                                    className="px-4 py-2 bg-[#4895ef] text-white text-sm rounded-lg hover:bg-[#3a7bd5] transition">
+                                    Agregar
+                                </button>
+                            </div>
+
+                            {expenses.length > 0 && (
+                                <div>
+                                    <p className="text-sm text-[#a0a0a0] mb-2">Gastos del turno:</p>
+                                    {expenses.map((expense) => (
+                                        <div key={expense._id} className="flex justify-between text-sm py-1">
+                                            <p>{expense.description}</p>
+                                            <p className="text-[#e63946]">-${expense.amount?.toLocaleString()}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
             <div className="flex flex-wrap gap-4 mb-8">
                 {rooms.map((room) => {
                     const occupants = getOccupants(room._id)
