@@ -3,6 +3,7 @@ const Room = require('../models/Room')
 const getAllRooms = async (req, res) => {
     try{
         const rooms = await Room.find({ active: true })
+            .sort({ number: 1 })
         res.json(rooms)
     }
     catch(error){
