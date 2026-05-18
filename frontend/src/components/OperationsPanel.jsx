@@ -541,7 +541,9 @@ const OperationsPanel = ({ currentShift }) => {
                         className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none mb-2"
                     />
                     <div className="flex flex-col gap-2 mb-4">
-                        {clients.map((client) => (
+                        {clients
+                            .filter(c => c.name.toLowerCase().includes(searchClientCheckIn.toLowerCase()))
+                            .map((client) => (
                             <div key={client._id} className="flex justify-between items-center bg-[#2d2d2d] px-3 py-2 rounded-lg">
                                 <p className="text-sm">{client.name} — {client.truckPlate}</p>
                                 <button onClick={() => handleCheckIn(client)}
