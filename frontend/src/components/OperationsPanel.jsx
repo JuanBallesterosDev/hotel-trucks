@@ -28,6 +28,7 @@ const OperationsPanel = ({ currentShift }) => {
     const [showExpenses, setShowExpenses] = useState(false)
     const [newExpense, setNewExpense] = useState({ description: '', amount: '' })
     const [newIncome, setNewIncome] = useState({ description: '', amount: '' })
+    const [searchClientCheckIn, setSearchClientCheckIn] = useState('')
 
     useEffect(() => {
         fetchRooms()
@@ -533,6 +534,12 @@ const OperationsPanel = ({ currentShift }) => {
                     )}
 
                     <p className="text-sm text-[#a0a0a0] mb-2">Seleccionar cliente:</p>
+                    <input 
+                        placeholder="Buscar cliente..." 
+                        value={searchClientCheckIn}
+                        onChange={(e) => setSearchClientCheckIn(e.target.value)}
+                        className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none mb-2"
+                    />
                     <div className="flex flex-col gap-2 mb-4">
                         {clients.map((client) => (
                             <div key={client._id} className="flex justify-between items-center bg-[#2d2d2d] px-3 py-2 rounded-lg">
