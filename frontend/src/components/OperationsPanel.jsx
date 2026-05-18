@@ -29,6 +29,7 @@ const OperationsPanel = ({ currentShift }) => {
     const [newExpense, setNewExpense] = useState({ description: '', amount: '' })
     const [newIncome, setNewIncome] = useState({ description: '', amount: '' })
     const [searchClientCheckIn, setSearchClientCheckIn] = useState('')
+    const [searchProduct, setSearchProduct] = useState('')
 
     useEffect(() => {
         fetchRooms()
@@ -640,8 +641,16 @@ const OperationsPanel = ({ currentShift }) => {
                             )}
 
                             <p className="text-sm text-[#a0a0a0] mb-2">Agregar consumo:</p>
+                            <input
+                                placeholder="Buscar producto..."
+                                value={searchProduct}
+                                onChange={(e) => setSearchProduct(e.target.value)}
+                                className="w-full bg-[#2d2d2d] text-[#e0e0e0] px-3 py-2 rounded-lg text-sm outline-none mb-2"
+                            />
                             <div className="flex flex-col gap-2 mb-4">
-                                {products.map((product) => (
+                                {products
+                                    .filter(p => p.name.toLowerCase().includes(searchProduct.toLowerCase()))
+                                    .map((product) => (
                                     <div key={product._id} className="flex items-center justify-between bg-[#2d2d2d] px-3 py-2 rounded-lg">
                                         <p className="text-sm">{product.name} — ${product.price.toLocaleString()}</p>
                                         <div className="flex items-center gap-2">
