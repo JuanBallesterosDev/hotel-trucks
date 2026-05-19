@@ -132,11 +132,18 @@ const checkOut = async (req, res) => {
             }
         }
         record.status = 'checkout'
+        record.paid = req.body.paid || record.paid
+        record.paymentMethod = req.body.paymentMethod || 'efectivo'
         await record.save()
 
         const shift = await Shift.findById(record.shift)
         if (shift && shift.status === 'open') {
             shift.totalCollected += req.body.paid || 0
+            if (req.body.paymentMethod === 'transferencia') {
+                shift.totalTransfer += req.body.paid || 0
+            } else {
+                shift.totalCash += req.body.paid || 0
+            }
             await shift.save()
         }
 
@@ -198,14 +205,17 @@ const registerPayment = async (req, res) => {
         })
         if (activeShift) {
             activeShift.totalCollected += req.body.amount
+            if (req.body.paymentMethod === 'transferencia') {
+                activeShift.totalTransfer += req.body.amount
+            } else {
+                activeShift.totalCash += req.body.amount
+            }
             await activeShift.save()
         }
-
-        res.json({ message: 'Payment registered successfully.' })
+                res.json({ message: 'Payment registered successfully.' })
     } catch (error) {
         res.status(500).json({ message: 'Server error.' })
     }
-
 }
 
 const moveRecord = async (req, res) => {

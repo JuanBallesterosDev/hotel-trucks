@@ -12,6 +12,8 @@ const shiftSchema = new mongoose.Schema({
     cashDifference: { type: Number},
     status: { type: String, enum: ['open', 'closed'], default: 'open' },
     note: { type: String },
+    totalCash: { type: Number, default: 0 },
+    totalTransfer: { type: Number, default: 0 },
 
 }, { timestamps: true })
 

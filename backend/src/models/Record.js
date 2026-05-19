@@ -13,7 +13,8 @@ const recordSchema = new mongoose.Schema({
     balance: { type: Number, default: 0 },
     status: { type: String, enum: ['active', 'checkout'], default: 'active' },
     receiptSent: { type: Boolean, default: false },
-    receiptChannel: { type: String, enum: ['whatsapp', 'email', 'printed']}
+    receiptChannel: { type: String, enum: ['whatsapp', 'email', 'printed']},
+    paymentMethod: { type: String, enum: ['efectivo', 'transferencia'], default: 'efectivo' }
 
 }, { timestamps: true })
 

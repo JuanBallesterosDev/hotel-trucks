@@ -30,6 +30,7 @@ const OperationsPanel = ({ currentShift }) => {
     const [newIncome, setNewIncome] = useState({ description: '', amount: '' })
     const [searchClientCheckIn, setSearchClientCheckIn] = useState('')
     const [searchProduct, setSearchProduct] = useState('')
+    const [paymentMethod, setPaymentMethod] = useState('efectivo')
 
     useEffect(() => {
         fetchRooms()
@@ -165,7 +166,10 @@ const OperationsPanel = ({ currentShift }) => {
         const paid = prompt('Digite el valor pagado:')
         if (paid === null) return
         try {
-            await api.put(`/records/${activeRecord._id}/checkout`, { paid: Number(paid) })
+            await api.put(`/records/${activeRecord._id}/checkout`, { 
+                paid: Number(paid),
+                paymentMethod: paymentMethod
+            })
             setSelectedRoom(null)
             setActiveRecord(null)
             setConsumptions([])
@@ -183,10 +187,12 @@ const OperationsPanel = ({ currentShift }) => {
         if (payment === null) return
         try {
             await api.post(`/records/client/${activeRecord.client._id}/payment`, { 
-                amount: Number(payment) 
+                amount: Number(payment),
+                paymentMethod: paymentMethod 
             })
             const updated = await api.get(`/records/${activeRecord._id}`)
             setActiveRecord(updated.data)
+            setPaymentMethod('efectivo')
             fetchDebts()
             fetchClientDebt(activeRecord.client._id) 
             fetchShiftSummary()           
@@ -347,25 +353,33 @@ const OperationsPanel = ({ currentShift }) => {
                         </button>
                     </div>
                     <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div className="bg-[#2d2d2d] rounded-lg p-3">
-                            <p className="text-[#a0a0a0]">Caja inicial</p>
-                            <p className="font-semibold text-lg">${shiftSummary.initialCash?.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-[#2d2d2d] rounded-lg p-3">
-                            <p className="text-[#a0a0a0]">Ingresos</p>
-                            <p className="font-semibold text-lg text-[#4cc9f0]">+${shiftSummary.totalCollected?.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-[#2d2d2d] rounded-lg p-3">
-                            <p className="text-[#a0a0a0]">Gastos</p>
-                            <p className="font-semibold text-lg text-[#e63946]">-${shiftSummary.totalExpenses?.toLocaleString()}</p>
-                        </div>
-                        <div className="bg-[#2d2d2d] rounded-lg p-3">
-                            <p className="text-[#a0a0a0]">Dinero actual</p>
-                            <p className="font-semibold text-lg text-[#4895ef]">
-                                ${(shiftSummary.initialCash + shiftSummary.totalCollected - shiftSummary.totalExpenses)?.toLocaleString()}
-                            </p>
-                        </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Caja inicial</p>
+                        <p className="font-semibold text-lg">${shiftSummary.initialCash?.toLocaleString()}</p>
                     </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Total ingresos</p>
+                        <p className="font-semibold text-lg text-[#4cc9f0]">+${shiftSummary.totalCollected?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Efectivo</p>
+                        <p className="font-semibold text-lg text-[#4cc9f0]">+${shiftSummary.totalCash?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Transferencias</p>
+                        <p className="font-semibold text-lg text-[#4cc9f0]">+${shiftSummary.totalTransfer?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Gastos</p>
+                        <p className="font-semibold text-lg text-[#e63946]">-${shiftSummary.totalExpenses?.toLocaleString()}</p>
+                    </div>
+                    <div className="bg-[#2d2d2d] rounded-lg p-3">
+                        <p className="text-[#a0a0a0]">Dinero actual</p>
+                        <p className="font-semibold text-lg text-[#4895ef]">
+                            ${(shiftSummary.initialCash + shiftSummary.totalCollected - shiftSummary.totalExpenses)?.toLocaleString()}
+                        </p>
+                    </div>
+                </div>
 
                     {showExpenses && (
                         <div className="mt-4 border-t border-[#2d2d2d] pt-4">
@@ -667,6 +681,19 @@ const OperationsPanel = ({ currentShift }) => {
                                 ))}
                             </div>
 
+                            <div className="mb-3">
+                                <p className="text-xs text-[#a0a0a0] mb-1">Método de pago:</p>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setPaymentMethod('efectivo')}
+                                        className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${paymentMethod === 'efectivo' ? 'bg-[#4895ef] text-white' : 'bg-[#2d2d2d] text-[#a0a0a0]'}`}>
+                                        Efectivo
+                                    </button>
+                                    <button onClick={() => setPaymentMethod('transferencia')}
+                                        className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${paymentMethod === 'transferencia' ? 'bg-[#4895ef] text-white' : 'bg-[#2d2d2d] text-[#a0a0a0]'}`}>
+                                        Transferencia
+                                    </button>
+                                </div>
+                            </div>
                             <div className="flex gap-2">
                                 <button onClick={handlePartialPayment}
                                     className="flex-1 px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition">
