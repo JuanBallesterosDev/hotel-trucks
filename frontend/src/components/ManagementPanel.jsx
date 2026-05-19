@@ -196,13 +196,14 @@ const ManagementPanel = () => {
                 { header: 'Balance', key: 'balance', width: 15 },
                 { header: 'Status', key: 'status', width: 12 },
                 { header: 'Employee', key: 'shift', width: 20 },
+                { header: 'Método de Pago', key: 'paymentMethod', width: 15 },
             ]
 
             // Style header
             detailSheet.getRow(1).font = { bold: true }
             detailSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D2D2D' } }
             detailSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
-            detailSheet.autoFilter = { from: 'A1', to: 'L1' }
+            detailSheet.autoFilter = { from: 'L1', to: 'M1' }
             detailSheet.views = [{ state: 'frozen', ySplit: 1 }]
 
             filteredRecords.forEach(record => {
@@ -218,7 +219,8 @@ const ManagementPanel = () => {
                     paid: record.paid,
                     balance: record.balance,
                     status: record.status,
-                    shift: record.shift?.employee?.name || 'N/A'
+                    shift: record.shift?.employee?.name || 'N/A',
+                    paymentMethod: record.paymentMethod || 'efectivo'
                 })
 
                 // Color balance negativo en rojo
@@ -276,6 +278,55 @@ const ManagementPanel = () => {
                 ;['total', 'paid', 'debt'].forEach(key => {
                     row.getCell(key).numFmt = '$#,##0'
                 })
+            })
+
+            // ─── HOJA 4: RESUMEN DE TURNOS ───
+            const shiftsSheet = workbook.addWorksheet('Turnos')
+
+            shiftsSheet.columns = [
+                { header: 'Fecha apertura', key: 'openedAt', width: 20 },
+                { header: 'Fecha cierre', key: 'closedAt', width: 20 },
+                { header: 'Empleado', key: 'employee', width: 25 },
+                { header: 'Caja inicial', key: 'initialCash', width: 15 },
+                { header: 'Total efectivo', key: 'totalCash', width: 15 },
+                { header: 'Total transferencias', key: 'totalTransfer', width: 20 },
+                { header: 'Total ingresos', key: 'totalCollected', width: 15 },
+                { header: 'Total gastos', key: 'totalExpenses', width: 15 },
+                { header: 'Caja final', key: 'finalCash', width: 15 },
+                { header: 'Diferencia', key: 'cashDifference', width: 15 },
+                { header: 'Estado', key: 'status', width: 12 },
+            ]
+
+            shiftsSheet.getRow(1).font = { bold: true }
+            shiftsSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D2D2D' } }
+            shiftsSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            shiftsSheet.views = [{ state: 'frozen', ySplit: 1 }]
+
+            const filteredShifts = shiftsRes.data.filter(shift => {
+                const shiftDate = new Date(shift.openedAt).toISOString().split('T')[0]
+                return shiftDate >= reportDateFrom && shiftDate <= reportDateTo
+            })
+
+            filteredShifts.forEach(shift => {
+                const row = shiftsSheet.addRow({
+                    openedAt: new Date(shift.openedAt).toLocaleString(),
+                    closedAt: shift.closedAt ? new Date(shift.closedAt).toLocaleString() : 'Abierto',
+                    employee: shift.employee?.name || 'N/A',
+                    initialCash: shift.initialCash,
+                    totalCash: shift.totalCash || 0,
+                    totalTransfer: shift.totalTransfer || 0,
+                    totalCollected: shift.totalCollected,
+                    totalExpenses: shift.totalExpenses || 0,
+                    finalCash: shift.finalCash || 0,
+                    cashDifference: shift.cashDifference || 0,
+                    status: shift.status
+                })
+                ;['initialCash', 'totalCash', 'totalTransfer', 'totalCollected', 'totalExpenses', 'finalCash', 'cashDifference'].forEach(key => {
+                    row.getCell(key).numFmt = '$#,##0'
+                })
+                if (shift.cashDifference < 0) {
+                    row.getCell('cashDifference').font = { color: { argb: 'FFE63946' } }
+                }
             })
 
             const buffer = await workbook.xlsx.writeBuffer()
