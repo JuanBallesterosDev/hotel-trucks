@@ -245,5 +245,29 @@ const moveRecord = async (req, res) => {
     }
 }
 
+const cancelRecord = async (req, res) => {
+    try {
+        const record = await Record.findById(req.params.id)
+        if (!record) {
+            return res.status(404).json({ message: 'Record not found.' })
+        }
+        if (record.status === 'checkout') {
+            return res.status(400).json({ message: 'Cannot cancel a checked out record.' })
+        }
 
-module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment, moveRecord }
+        await Record.findByIdAndDelete(req.params.id)
+
+        // Verificar si quedan más huéspedes en la habitación
+        const activeRecords = await Record.find({ room: record.room, status: 'active' })
+        if (activeRecords.length === 0) {
+            await Room.findByIdAndUpdate(record.room, { status: 'available' })
+        }
+
+        res.json({ message: 'Record cancelled successfully.' })
+    } catch (error) {
+        res.status(500).json({ message: 'Server error.' })
+    }
+}
+
+
+module.exports = { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment, moveRecord, cancelRecord }

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment, moveRecord } = require('../controllers/record.controller.js')
+const { createRecord, getAllRecords, getRecordById, updateRecord, checkOut, getClientDebt, getAllDebts, registerPayment, moveRecord, cancelRecord } = require('../controllers/record.controller.js')
 
 const auth  = require('../middlewares/auth')
 const checkRole = require('../middlewares/roles')
@@ -15,6 +15,7 @@ router.post('/', auth, createRecord)
 router.put('/:id',auth, updateRecord)
 router.put('/:id/checkout', auth, checkOut)
 router.put('/:id/move', auth, moveRecord)
+router.delete('/:id/cancel', auth, cancelRecord)
 
 
 module.exports = router

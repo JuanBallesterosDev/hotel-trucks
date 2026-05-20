@@ -335,6 +335,22 @@ const OperationsPanel = ({ currentShift }) => {
         }
     }
 
+    const handleCancelRecord = async () => {
+        if (!window.confirm('¿Seguro que desea cancelar esta reserva?')) return
+        try {
+            await api.delete(`/records/${activeRecord._id}/cancel`)
+            setSelectedRoom(null)
+            setSelectedRecord(null)
+            setActiveRecord(null)
+            setConsumptions([])
+            fetchRooms()
+            fetchActiveRecords()
+            fetchDebts()
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e0e0e0]">
         
@@ -707,6 +723,10 @@ const OperationsPanel = ({ currentShift }) => {
                             <button onClick={() => setShowMoveRoom(true)}
                                 className="w-full px-4 py-2 bg-[#2d2d2d] text-sm rounded-lg hover:bg-[#3d3d3d] transition mt-2">
                                 Mover a otra habitación
+                            </button>
+                            <button onClick={handleCancelRecord}
+                                className="w-full px-4 py-2 bg-[#e63946] text-white text-sm rounded-lg hover:opacity-80 transition mt-2">
+                                Cancelar reserva
                             </button>
 
                             {showMoveRoom && (
