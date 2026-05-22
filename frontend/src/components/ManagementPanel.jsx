@@ -349,6 +349,7 @@ const ManagementPanel = () => {
                 { header: 'Turno', key: 'shiftDate', width: 15 },
                 { header: 'Empleado', key: 'employee', width: 25 },
                 { header: 'Descripción', key: 'description', width: 35 },
+                { header: 'Tipo', key: 'type', width: 12 },
                 { header: 'Monto', key: 'amount', width: 15 },
             ]
 
@@ -363,10 +364,17 @@ const ManagementPanel = () => {
                     shiftDate: expense.shiftDate,
                     employee: expense.employeeName,
                     description: expense.description,
+                    type: expense.type === 'ingreso' ? 'Ingreso' : 'Gasto',
                     amount: expense.amount
                 })
                 row.getCell('amount').numFmt = '$#,##0'
-                row.getCell('amount').font = { color: { argb: 'FFE63946' } }
+                if (expense.type === 'ingreso') {
+                    row.getCell('amount').font = { color: { argb: 'FF4CC9F0' } }
+                    row.getCell('type').font = { color: { argb: 'FF4CC9F0' } }
+                } else {
+                    row.getCell('amount').font = { color: { argb: 'FFE63946' } }
+                    row.getCell('type').font = { color: { argb: 'FFE63946' } }
+                }
             })
 
             const buffer = await workbook.xlsx.writeBuffer()

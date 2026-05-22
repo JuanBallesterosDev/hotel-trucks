@@ -97,6 +97,14 @@ const addIncome = async (req, res) => {
         if (!shift) {
             return res.status(400).json({ message: 'No open shift found.' })
         }
+        
+        await Expense.create({
+            shift: shift._id,
+            description,
+            amount,
+            type: 'ingreso'
+        })
+
         shift.totalCollected += amount
         await shift.save()
         res.status(201).json({ shift })
