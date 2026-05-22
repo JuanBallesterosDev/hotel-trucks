@@ -151,7 +151,7 @@ const ManagementPanel = () => {
             workbook.creator = 'Hotel Trucks System'
             workbook.created = new Date()
 
-            const summarySheet = workbook.addWorksheet('Summary')
+            const summarySheet = workbook.addWorksheet('Resumen')
         
             summarySheet.mergeCells('A1:C1')
             summarySheet.getCell('A1').value = 'HOTEL TRUCKS — REPORT SUMMARY'
@@ -181,7 +181,7 @@ const ManagementPanel = () => {
             summarySheet.getColumn(2).width = 20
 
             // ─── HOJA 2: DETALLE DE TRANSACCIONES ───
-            const detailSheet = workbook.addWorksheet('Transactions')
+            const detailSheet = workbook.addWorksheet('Transacciones')
 
             detailSheet.columns = [
                 { header: 'Date & Time', key: 'date', width: 20 },
@@ -248,7 +248,7 @@ const ManagementPanel = () => {
             totalsRow.font = { bold: true }
 
             // ─── HOJA 3: DEUDAS PENDIENTES ───
-            const debtsSheet = workbook.addWorksheet('Pending Debts')
+            const debtsSheet = workbook.addWorksheet('Deudas Pendientes')
 
             debtsSheet.columns = [
                 { header: 'Client', key: 'client', width: 25 },
@@ -327,6 +327,46 @@ const ManagementPanel = () => {
                 if (shift.cashDifference < 0) {
                     row.getCell('cashDifference').font = { color: { argb: 'FFE63946' } }
                 }
+            })
+
+            const allExpenses = []
+            for (const shift of filteredShifts) {
+                const expensesRes = await api.get(`/shifts/${shift._id}/expenses`)
+                expensesRes.data.forEach(expense => {
+                    allExpenses.push({
+                        ...expense,
+                        employeeName: shift.employee?.name || 'N/A',
+                        shiftDate: new Date(shift.openedAt).toLocaleDateString()
+                    })
+                })
+            }
+
+            // ─── HOJA 5: GASTOS E INGRESOS ───
+            const expensesSheet = workbook.addWorksheet('Gastos e Ingresos')
+
+            expensesSheet.columns = [
+                { header: 'Fecha', key: 'date', width: 15 },
+                { header: 'Turno', key: 'shiftDate', width: 15 },
+                { header: 'Empleado', key: 'employee', width: 25 },
+                { header: 'Descripción', key: 'description', width: 35 },
+                { header: 'Monto', key: 'amount', width: 15 },
+            ]
+
+            expensesSheet.getRow(1).font = { bold: true }
+            expensesSheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2D2D2D' } }
+            expensesSheet.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }
+            expensesSheet.views = [{ state: 'frozen', ySplit: 1 }]
+
+            allExpenses.forEach(expense => {
+                const row = expensesSheet.addRow({
+                    date: new Date(expense.date).toLocaleDateString(),
+                    shiftDate: expense.shiftDate,
+                    employee: expense.employeeName,
+                    description: expense.description,
+                    amount: expense.amount
+                })
+                row.getCell('amount').numFmt = '$#,##0'
+                row.getCell('amount').font = { color: { argb: 'FFE63946' } }
             })
 
             const buffer = await workbook.xlsx.writeBuffer()
