@@ -54,7 +54,7 @@ const closeShift = async(req, res) => {
         }
         shift.finalCash = finalCash
         shift.closedAt = Date.now()
-        shift.cashDifference = finalCash - (shift.initialCash + shift.totalCollected - shift.totalExpenses)
+        shift.cashDifference = finalCash - (shift.initialCash + shift.totalCash - shift.totalExpenses)
         shift.status = 'closed'
         await shift.save()
         res.json(shift)  
@@ -97,7 +97,7 @@ const addIncome = async (req, res) => {
         if (!shift) {
             return res.status(400).json({ message: 'No open shift found.' })
         }
-        
+
         await Expense.create({
             shift: shift._id,
             description,
