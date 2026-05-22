@@ -392,7 +392,7 @@ const OperationsPanel = ({ currentShift }) => {
                     <div className="bg-[#2d2d2d] rounded-lg p-3">
                         <p className="text-[#a0a0a0]">Dinero actual</p>
                         <p className="font-semibold text-lg text-[#4895ef]">
-                            ${(shiftSummary.initialCash + shiftSummary.totalCollected - shiftSummary.totalExpenses)?.toLocaleString()}
+                            ${(shiftSummary.initialCash + shiftSummary.totalCash - shiftSummary.totalExpenses)?.toLocaleString()}
                         </p>
                     </div>
                 </div>
