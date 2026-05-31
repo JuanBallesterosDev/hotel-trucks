@@ -595,21 +595,20 @@ const ManagementPanel = () => {
                                     <div className="border-t border-[#2d2d2d] px-4 pb-4 pt-3 text-sm">
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Precio Habitación</span><span>${record.roomPrice?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Consumos</span><span>${record.totalConsumptions?.toLocaleString()}</span></div>
+                                        {recordConsumptions[record._id]?.length > 0 && (
+                                            <div className="ml-2 mb-1">
+                                                {recordConsumptions[record._id].map((c) => (
+                                                    <div key={c._id} className="flex justify-between py-1 text-[#a0a0a0]">
+                                                        <p>• {c.productName} x{c.quantity}</p>
+                                                        <p>${c.total?.toLocaleString()}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Total</span><span>${record.totalDay?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Pagado</span><span>${record.paid?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
                                             <span className="text-[#a0a0a0]">Saldo</span>
-                                            {recordConsumptions[record._id]?.length > 0 && (
-                                                <div className="mt-3 border-t border-[#3d3d3d] pt-3">
-                                                    <p className="text-[#a0a0a0] mb-2">Detalle de consumos:</p>
-                                                    {recordConsumptions[record._id].map((c) => (
-                                                        <div key={c._id} className="flex justify-between py-1">
-                                                            <p>{c.productName} x{c.quantity}</p>
-                                                            <p>${c.total?.toLocaleString()}</p>
-                                                        </div>
-                                                    ))} 
-                                                </div>
-                                            )}
                                             <span className={record.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
                                                 {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : `$${record.balance?.toLocaleString()}`}
                                             </span>
