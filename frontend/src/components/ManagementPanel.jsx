@@ -23,6 +23,7 @@ const ManagementPanel = () => {
     const [expandedRecord, setExpandedRecord] = useState(null)
     const [reportDateFrom, setReportDateFrom] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
     const [reportDateTo, setReportDateTo] = useState(new Date().toISOString().split('T')[0])
+    const [recordConsumptions, setRecordConsumptions] = useState({})
 
     useEffect(() => {
         fetchEmployees()
@@ -386,6 +387,16 @@ const ManagementPanel = () => {
         }
     }
 
+    const fetchRecordConsumptions = async (recordId) => {
+        if (recordConsumptions[recordId]) return
+        try {
+            const res = await api.get(`/consumptions/record/${recordId}`)
+            setRecordConsumptions(prev => ({ ...prev, [recordId]: res.data }))
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return(
         <div>
             {/*Sub-tabs */}
@@ -561,7 +572,12 @@ const ManagementPanel = () => {
                         {getFilteredRecords().map((record) => (
                             <div key={record._id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl overflow-hidden">
                                 <div className="p-4 flex justify-between items-center cursor-pointer hover:border-[#4895ef] transition"
-                                    onClick={() => setExpandedRecord(expandedRecord === record._id ? null : record._id)}>
+                                    onClick={() => {
+                                        setExpandedRecord(expandedRecord === record._id ? null : record._id)
+                                        if (expandedRecord !== record._id) {
+                                            fetchRecordConsumptions(record._id)
+                                        }
+                                    }}>
                                     <div>
                                         <p className="font-medium">{record.client?.name}</p>
                                         <p className="text-sm text-[#a0a0a0]">Room {record.room?.number} — {new Date(record.date).toLocaleDateString()}</p>
@@ -583,6 +599,17 @@ const ManagementPanel = () => {
                                         <div className="flex justify-between py-1"><span className="text-[#a0a0a0]">Pagado</span><span>${record.paid?.toLocaleString()}</span></div>
                                         <div className="flex justify-between py-1 border-t border-[#3d3d3d] mt-1 pt-1">
                                             <span className="text-[#a0a0a0]">Saldo</span>
+                                            {recordConsumptions[record._id]?.length > 0 && (
+                                                <div className="mt-3 border-t border-[#3d3d3d] pt-3">
+                                                    <p className="text-[#a0a0a0] mb-2">Detalle de consumos:</p>
+                                                    {recordConsumptions[record._id].map((c) => (
+                                                        <div key={c._id} className="flex justify-between py-1">
+                                                            <p>{c.productName} x{c.quantity}</p>
+                                                            <p>${c.total?.toLocaleString()}</p>
+                                                        </div>
+                                                    ))} 
+                                                </div>
+                                            )}
                                             <span className={record.balance < 0 ? 'text-[#e63946]' : 'text-[#4cc9f0]'}>
                                                 {record.balance < 0 ? `-$${Math.abs(record.balance).toLocaleString()}` : `$${record.balance?.toLocaleString()}`}
                                             </span>
