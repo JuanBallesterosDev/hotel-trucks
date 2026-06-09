@@ -54,7 +54,7 @@ const closeShift = async(req, res) => {
         }
         shift.finalCash = finalCash
         shift.closedAt = Date.now()
-        shift.cashDifference = finalCash - (shift.initialCash + shift.totalCash - shift.totalExpenses)
+        shift.cashDifference = Number(finalCash) - (shift.initialCash + shift.totalCash - shift.totalExpenses)
         shift.status = 'closed'
         await shift.save()
         res.json(shift)  
@@ -92,7 +92,7 @@ const getAllShifts = async (req, res) => {
 
 const addIncome = async (req, res) => {
     try {
-        const { description, amount } = req.body
+        const { description, amount, paymentMethod = 'cash' } = req.body
         const shift = await Shift.findOne({ employee: req.employee._id, status: 'open' })
         if (!shift) {
             return res.status(400).json({ message: 'No open shift found.' })
@@ -101,11 +101,21 @@ const addIncome = async (req, res) => {
         await Expense.create({
             shift: shift._id,
             description,
-            amount,
+            amount: Number(amount),
             type: 'ingreso'
         })
 
-        shift.totalCash += amount
+        const numericAmount = Number(amount)
+
+        shift.totalCollected += numericAmount
+
+        if (paymentMethod === 'transfer') {
+            shift.totalTransfer += numericAmount
+        } else {
+            shift.totalCash += numericAmount
+        }
+
+
         await shift.save()
         res.status(201).json({ shift })
     } catch (error) {
