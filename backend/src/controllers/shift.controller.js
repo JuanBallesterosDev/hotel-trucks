@@ -105,7 +105,7 @@ const addIncome = async (req, res) => {
             type: 'ingreso'
         })
 
-        shift.totalCollected += amount
+        shift.totalCash += amount
         await shift.save()
         res.status(201).json({ shift })
     } catch (error) {
