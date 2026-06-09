@@ -325,9 +325,11 @@ const OperationsPanel = ({ currentShift }) => {
         try {
             const res = await api.post('/shifts/income', {
                 description: newIncome.description,
-                amount: Number(newIncome.amount)
+                amount: Number(newIncome.amount),
+                paymentMethod: paymentMethod
             })
             setNewIncome({ description: '', amount: '' })
+            setPaymentMethod('efectivo')
             setShiftSummary(res.data.shift)
             fetchShiftSummary()
         } catch (error) {
@@ -414,6 +416,16 @@ const OperationsPanel = ({ currentShift }) => {
                             </div>
 
                             <p className="text-sm text-[#a0a0a0] mb-3 mt-4">Registrar ingreso:</p>
+                            <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                                <button onClick={() => setPaymentMethod('efectivo')}
+                                    className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${paymentMethod === 'efectivo' ? 'bg-[#4895ef] text-white' : 'bg-[#2d2d2d] text-[#a0a0a0]'}`}>
+                                    Efectivo
+                                </button>
+                                <button onClick={() => setPaymentMethod('transferencia')}
+                                    className={`flex-1 px-3 py-2 text-sm rounded-lg transition ${paymentMethod === 'transferencia' ? 'bg-[#4895ef] text-white' : 'bg-[#2d2d2d] text-[#a0a0a0]'}`}>
+                                    Transferencia
+                                </button>
+                            </div>
                             <div className="flex flex-col sm:flex-row gap-2 mb-4">
                                 <input placeholder="Descripción" value={newIncome.description}
                                     onChange={(e) => setNewIncome({...newIncome, description: e.target.value})}

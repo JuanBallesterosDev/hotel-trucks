@@ -109,7 +109,7 @@ const addIncome = async (req, res) => {
 
         shift.totalCollected += numericAmount
 
-        if (paymentMethod === 'transfer') {
+        if (paymentMethod === 'transferencia') {
             shift.totalTransfer += numericAmount
         } else {
             shift.totalCash += numericAmount
